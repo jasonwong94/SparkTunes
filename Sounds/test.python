@@ -1,0 +1,11 @@
+import pygame
+pygame.mixer.init()
+
+file1="b20.ogg?dl=0"
+file2="b21.ogg?dl=0"
+
+sound1=pygame.mixer.Sound(file1)
+sound2=pygame.mixer.Sound(file2)
+
+sound1.play(5)
+sound2.play(5)

@@ -1,6 +1,30 @@
 import pygame, time
 
+#sandro- i'm such a noob in python....
+
 timeStampFile = open("timeStamp.txt", "a+")
+
+#list of filenames of notes that the user can toggle
+noteList = (
+	"c3", "d3", "e3", "f3", "g3", "a3", "b3",
+	"c4", "d4", "e4", "f4", "g4", "a4", "b4",
+	"c5"
+)
+
+#list of notes to play
+soundList = []
+
+# MSB = C5, LSB = C3
+# this function stores whatever sound files needs to be played in soundList
+def whichNoteToPlay(note):
+	for index in range(len(noteList)):
+		if note >> index & 0x0001:
+			soundList.append( pygame.mixer.Sound(noteList[index] + ".ogg") )
+
+# plays the list of sounds		
+def playNotes():
+	for index in range(len(soundList)):
+		soundList[index].play()
 
 def printInitialInfo():
 	result = pygame.mixer.get_init()
@@ -18,23 +42,14 @@ def timeStamp():
 	timeStampFile.close()
 	print formattedTime
 
-file1= "a3.ogg"
-file2= "b4.ogg"
-file3= "c5.oggs"
-
-
 pygame.mixer.init()
 
 printInitialInfo()
 timeStamp();
-
 print "Playing something"
-sound1 = pygame.mixer.Sound(file1)
-sound2 = pygame.mixer.Sound(file2)
-sound3 = pygame.mixer.Sound(file3)
-sound1.play()
-sound2.play()
-#sound3.play()
+
+whichNoteToPlay(0x0001)
+playNotes()
 time.sleep(1)
 
 

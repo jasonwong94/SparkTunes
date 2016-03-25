@@ -3,32 +3,30 @@ import pygame, time
 #sandro- i'm such a noob in python....
 
 #list of filenames of notes that the user can toggle
-
-noteList = {
-	"C3":"c3.ogg", "D3":"d3.ogg", "E3":"e3.ogg", "F3":"f3.ogg", "G3":"g3.ogg", "A3":"a3.ogg", "B3":"b3.ogg",
-	"C4":"c4.ogg", "D4":"d4.ogg", "E4":"e4.ogg", "F4":"f4.ogg", "G4":"g4.ogg", "A4":"a4.ogg", "B4":"b4.ogg",
-	"C5":"c5.ogg"
-}
+noteList = (
+	"c3", "d3", "e3", "f3", "g3", "a3", "b3",
+	"c4", "d4", "e4", "f4", "g4", "a4", "b4",
+	"c5"
+)
 
 #list of notes to play
 soundList = []
 
 # MSB = C5, LSB = C3
 # this function stores whatever sound files needs to be played in soundList
-def whichNoteToPlay(notes):
-	parsedNotes = notes.split(" ")
-	for index in range(len(parsedNotes)):
-		note = parsedNotes[index]
-		soundList.append( pygame.mixer.Sound(noteList[note]) )
+def whichNoteToPlay(note):
+	for index in range(len(noteList)):
+		if note >> index & 0x0001:
+			soundList.append( pygame.mixer.Sound(noteList[index] + ".ogg") )
 
 # plays the list of sounds		
 def playNotes():
 	for index in range(len(soundList)):
 		soundList[index].play()
 
-def playBeat(rawNotes):
+def playBeat(note):
 	print "Playing something"
-	whichNoteToPlay(rawNotes)
+	whichNoteToPlay(note)
 	playNotes()
 	
 	#def want to play around with the numbers here..what's the magic number

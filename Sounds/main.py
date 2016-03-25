@@ -5,6 +5,8 @@ import time, beats, pygame
 #some logging file for stat collections, just like Ready Set Step..
 timeStampFile = open("timeStamp.txt", "a+")
 
+TESTFLAG = False
+
 def printInitialInfo():
 	result = pygame.mixer.get_init()
 	print "Program initialized:"
@@ -21,14 +23,26 @@ def timeStamp():
 	timeStampFile.close()
 	print formattedTime
 
- 
+#initiate
+def test():
+	noteList = (
+		"C3", "D3", "E3", "F3", "G3", "A3", "B3",
+		"C4", "D4", "E4", "F4", "G4", "A4", "B4",
+		"C5"
+	)
+	for index in range(len(noteList)):
+		beats.playBeat(noteList[index])
+
 pygame.mixer.init()
 printInitialInfo()
 timeStamp()
 
-#implement some serial communication and call beats.playBeat 32 times...
-
-beats.playBeat(0x0001)
-beats.playBeat(0x0002)
+if TESTFLAG:
+	test()
+else:
+	#implement some serial communication and call beats.playBeat 32 times...
+	beats.playBeat("A3 B3 C4")
+	beats.playBeat("C3 D3 C5")
+	beats.playBeat("B4")
 
 pygame.mixer.quit()

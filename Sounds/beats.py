@@ -11,25 +11,27 @@ noteList = {
 }
 
 #list of notes to play
-soundList = []
 
 # MSB = C5, LSB = C3
 # this function stores whatever sound files needs to be played in soundList
-def whichNoteToPlay(notes):
+def whichNoteToPlay(notes, soundList):
 	parsedNotes = notes.split(" ")
+	print parsedNotes
 	for index in range(len(parsedNotes)):
 		note = parsedNotes[index]
+		print noteList[note]
 		soundList.append( pygame.mixer.Sound(noteList[note]) )
 
 # plays the list of sounds		
-def playNotes():
+def playNotes(soundList):
 	for index in range(len(soundList)):
 		soundList[index].play()
 
 def playBeat(rawNotes):
+	soundList = []
 	print "Playing something"
-	whichNoteToPlay(rawNotes)
-	playNotes()
+	whichNoteToPlay(rawNotes, soundList)
+	playNotes(soundList)
 	
 	#def want to play around with the numbers here..what's the magic number
 	time.sleep(0.35)
@@ -37,3 +39,4 @@ def playBeat(rawNotes):
 		print "Song is playing"
 	
 	time.sleep(0.35)
+	del soundList

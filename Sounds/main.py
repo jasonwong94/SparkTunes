@@ -56,6 +56,18 @@ sonata = ["C3 C4 E4 G4 C5",
               "E3",
               "G3"]
 
+chord = ["C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5",
+           "C3 E3 G3 C4 E4 G4 C5"]
+
 #initiate
 def test():
         beats.loadNoteSounds()
@@ -65,15 +77,17 @@ def test():
                 "C5"
         )
         for _ in range(5):
-                for index in range(len(sonata)):
-                        if sonata[index] != "":
-                                beats.playBeat(sonata[index])
+                for index in range(len(chord)):
+                        if chord[index] != "":
+                                beats.playBeat(chord[index])
                         #beats.playBeat(' '.join(noteList))
+                        #beats.playBeat(noteList[index % len(noteList)])
+                        #beats.playBeat("D3 B3")
                         time.sleep(0.2)
 
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.mixer.init()
-pygame.mixer.set_num_channels(30)
+pygame.mixer.set_num_channels(300)
 printInitialInfo()
 timeStamp()
 

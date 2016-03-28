@@ -1,33 +1,24 @@
 // Pin Assignments
-
 // pin numbers of the columns
 const int columns[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
-
 // pin numbers of the rows
 const int rows[15] = {33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
-
-
 // Bypass signal to activate NMOS transistors
 const int bypass = 48;
-
 // End Pin Assignments
 
 // Other Constants
-
 const int DEBOUNCE_DELAY = 200; // ms
-
 const char* note_names[15] = { "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6" };
-
+enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
 // End Other Constants
 
 // Global Variables
-
 // 1 == on, 0 == off. Indexed first by column, then by row
 char switch_value[32][15];
-
 // time (in ms since startup) of last switch value change. For debouncing
 unsigned long switch_value_last_change[32][15];
-
+int current_mode = STARTUP;
 // End Global Variables
 
 // Reads the given pin, and returns true iff the value of the pin changed from 0->1 in this
@@ -120,7 +111,32 @@ void setup() {
   Serial.begin(115200);
 }
 
+void run_startup() {
+  // TODO: implement me
+}
+
+void run_compose() {
+  // TODO: implement me
+}
+
+void run_play() {
+  // TODO: implement me
+}
+
+void run_share() {
+  // TODO: implement me
+}
+
 void loop() {
+  switch (current_mode) {
+    STARTUP: run_startup(); break;
+    COMPOSE: run_compose(); break;
+    PLAY: run_play(); break;
+    SHARE: run_share(); break;
+  }
+}
+
+//void loop() {
 //  pinMode(6, INPUT);
 //  pinMode(7, INPUT);
 //  
@@ -184,4 +200,4 @@ void loop() {
 //      }
 //    }
 //  }
-}
+//}

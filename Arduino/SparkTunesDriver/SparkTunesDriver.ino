@@ -1,68 +1,131 @@
+// Pin Assignments
+
+// pin numbers of the columns
+const int columns[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+
+// pin numbers of the rows
+const int rows[15] = {33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
+
+// Bypass signal to activate NMOS transistors
+const int bypass = 48;
+
+// End Pin Assignments
+
+// Global Variables
+
+// 1 == on, 0 == off. Indexed first by column, then by row
+char switch_value[32][15];
+
+// time (in ms since startup) of last switch value change. For debouncing
+unsigned long switch_value_last_change[32][15];
+
+const int DEBOUNCE_DELAY = 200; // ms
+
+// End Global Variables
+
+// Reads the given pin, and returns true iff the value of the pin changed from 0->1 in this
+// read cycle. Also takes into account debouncing - will not return true within DEBOUNCE_DELAY
+// ms of the last time the input toggled/
+// pin: the pin to read from
+// value: address of the place to store the current pin value
+// last_updated: address of the place to store the time if this pin was changed
+// now: current time, in ms since startup
+int get_button_posedge(int pin, int* value, unsigned long* last_updated, unsigned long now) {
+  if (now - *last_updated < DEBOUNCE_DELAY) {
+    // debouncing
+    return false;
+  }
+  
+  int new_value = digitalRead(pin);
+  if (new_value != *value) {
+    *value = new_value;
+    *last_updated = now;
+    return new_value;
+  }
+  
+  return false;
+}
 
 void setup() {
-  pinMode(6, INPUT);
-  pinMode(7, INPUT);
+  // Init pins
   
+  for (int i = 0; i < 32; i++) {
+    pinMode(columns[i], INPUT);
+  }
   
-  pinMode(11, OUTPUT);
-  pinMode(12, OUTPUT);
+  for (int i = 0; i < 15; i++) {
+    pinMode(rows[i], OUTPUT);
+    digitalWrite(rows[i], LOW);
+  }
   
-  digitalWrite(11, HIGH);
-  digitalWrite(12, HIGH);
+  pinMode(bypass, OUTPUT);
+  digitalWrite(bypass, LOW);
   
-  //digitalWrite(6, LOW);
-  //digitalWrite(7, LOW);
+  // Init globals
+  for (int i = 0; i < 32; i++) {
+    for (int j = 0; j < 15; j++) {
+      // NOTE: SWITCHES COULD ALREADY BE ON! AT SOME POINT WE NEED TO UPDATE THESE TO THEIR REAL VALUE!
+      switch_value[i][j] = 0;
+      
+      switch_value_last_change[i][j] = 0;
+    }
+  }
   
+  // Init serial
   Serial.begin(115200);
 }
 
 void loop() {
-  pinMode(6, INPUT);
-  pinMode(7, INPUT);
+//  pinMode(6, INPUT);
+//  pinMode(7, INPUT);
+//  
+//  int x1, x2, y1, y2, x3;
+//  
+//  digitalWrite(11, LOW);
+//  digitalWrite(12, HIGH);
+//  //delay(1);
+//  x1 = digitalRead(6);
+//  x1 = digitalRead(6);
+//  y1 = digitalRead(7);
+//  y1 = digitalRead(7);
+//  
+//  digitalWrite(12, LOW);
+//  digitalWrite(11, HIGH);
+//  //delay(1);
+//  x2 = digitalRead(6);
+//  x2 = digitalRead(6);
+//  y2 = digitalRead(7);
+//  y2 = digitalRead(7);
+//  
+//  for (int i = 0; i < 30; i++ ) {
+//    digitalWrite(11, LOW);
+//    digitalWrite(12, LOW);
+//    x3 = digitalRead(6);
+//    x3 = digitalRead(6);
+//    x3 = digitalRead(7);
+//    x3 = digitalRead(7);
+//  }
+//  
+//  pinMode(6, OUTPUT);
+//  pinMode(7, OUTPUT);
+//  digitalWrite(6, LOW);
+//  digitalWrite(7, LOW);
+//  digitalWrite(11, HIGH);
+//  digitalWrite(12, HIGH);
+//  
+//  Serial.println("--------------------------");
+//  Serial.print(x1);
+//  Serial.print("    ");
+//  Serial.println(y1);
+//  Serial.print(x2);
+//  Serial.print("    ");
+//  Serial.println(y2);
+//  
+//  delay(1000);
   
-  int x1, x2, y1, y2, x3;
   
-  digitalWrite(11, LOW);
-  digitalWrite(12, HIGH);
-  //delay(1);
-  x1 = digitalRead(6);
-  x1 = digitalRead(6);
-  y1 = digitalRead(7);
-  y1 = digitalRead(7);
   
-  digitalWrite(12, LOW);
-  digitalWrite(11, HIGH);
-  //delay(1);
-  x2 = digitalRead(6);
-  x2 = digitalRead(6);
-  y2 = digitalRead(7);
-  y2 = digitalRead(7);
   
-  for (int i = 0; i < 30; i++ ) {
-    digitalWrite(11, LOW);
-    digitalWrite(12, LOW);
-    x3 = digitalRead(6);
-    x3 = digitalRead(6);
-    x3 = digitalRead(7);
-    x3 = digitalRead(7);
-  }
-  
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  digitalWrite(6, LOW);
-  digitalWrite(7, LOW);
-  digitalWrite(11, HIGH);
-  digitalWrite(12, HIGH);
-  
-  Serial.println("--------------------------");
-  Serial.print(x1);
-  Serial.print("    ");
-  Serial.println(y1);
-  Serial.print(x2);
-  Serial.print("    ");
-  Serial.println(y2);
-  
-  delay(1000);
   
 //  while (1) {
 //    digitalWrite(7, HIGH);   

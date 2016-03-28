@@ -15,6 +15,13 @@ const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 const int DEBOUNCE_DELAY = 200; // ms
 const char* note_names[15] = { "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6" };
 enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
+// Tempo-related constants
+const unsigned long RES_MIN = 0;
+const unsigned long RES_MAX = 1000000;
+const unsigned long WAIT_MIN = 250; // corresponds to bmp of 240
+const unsigned long WAIT_MAX = 2000; // corresponds to bmp of 30
+// How many times to play a song before automatically stopping
+const int MAX_PLAY_TIMES = 5;
 // End Other Constants
 
 // Global Variables
@@ -68,6 +75,21 @@ void send_notes(char* notes) {
   Serial.println(""); // newline
 }
 
+// Reads the entire switch array, without taking into account debouncing or previous values or anything complicated
+int basic_read_switches() {
+  digitalWrite(bypass, LOW); // deactivate bypass transistors
+  
+  for (int r = 0; r < 15; r++) {
+    digitalWrite(rows[r], HIGH); // activate this row
+    for (int c = 0; c < 32; c++) {
+      switch_value[c][r] = digitalRead(columns[c]);
+    }
+    digitalWrite(rows[r], LOW); // deactivate this row
+  }
+  
+  digitalWrite(bypass, HIGH); // reactivate bypass transistors
+}
+
 // Reads the entire switch array, all at once.
 // Updates newly_pressed_switches[15] array such that each entry will be 1 if there is a note
 // with that pitch somewhere on the grid which was turned on since the last time the switches were read.
@@ -108,12 +130,6 @@ int get_tempo() {
   // POT = (V_arduino*5/1024 * 1M) / (5 - V_arduino*5/1024)
   // POT = (V_arduino * 1M) / (1024 - V_arduino)
   
-  // Constants
-  const unsigned long RES_MIN = 0;
-  const unsigned long RES_MAX = 1000000;
-  const unsigned long WAIT_MIN = 250; // corresponds to bmp of 240
-  const unsigned long WAIT_MAX = 2000; // corresponds to bmp of 30
-  
   // Get current voltage and convert to scaled resistance
   int voltage = analogRead(tempo_pot);
   if (voltage < 0) voltage = 0; // is this even possible?
@@ -125,7 +141,6 @@ int get_tempo() {
   
   return WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
 }
-  
 
 void setup() {
   // Init pins
@@ -144,12 +159,10 @@ void setup() {
   // Init globals
   for (int i = 0; i < 32; i++) {
     for (int j = 0; j < 15; j++) {
-      // NOTE: SWITCHES COULD ALREADY BE ON! AT SOME POINT WE NEED TO UPDATE THESE TO THEIR REAL VALUE!
-      switch_value[i][j] = 0;
-      
       switch_value_last_change[i][j] = 0;
     }
   }
+  basic_read_switches(); // sets initial switch values
   play_button_value = false;
   play_button_last_change = 0;
   
@@ -195,7 +208,6 @@ void run_compose() {
 //   a) we've played the song the maximum # of times
 //   b) the user presses the play button again
 void run_play() {
-  const int MAX_PLAY_TIMES = 5; // or whatever
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
     for (int beat = 0; beat < 32; beat++) {
       unsigned long start_beat = millis();

@@ -219,8 +219,7 @@ void run_play() {
       }
       
       // Read the switches
-      char not_used[15];
-      read_switches(not_used);
+      basic_read_switches();
       
       // Get the current tempo
       int tempo = get_tempo();

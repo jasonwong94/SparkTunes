@@ -5,6 +5,8 @@ const int columns[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
 const int rows[15] = {33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
 // Bypass signal to activate NMOS transistors
 const int bypass = 48;
+// Play button
+const int play_button = 49;
 // End Pin Assignments
 
 // Other Constants
@@ -18,6 +20,10 @@ enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
 char switch_value[32][15];
 // time (in ms since startup) of last switch value change. For debouncing
 unsigned long switch_value_last_change[32][15];
+// play button variables
+char play_button_value;
+unsigned long play_button_last_change;
+// what mode are we in?
 int current_mode = STARTUP;
 // End Global Variables
 
@@ -62,8 +68,10 @@ void send_notes(char* notes) {
 // Reads the entire switch array, all at once.
 // Updates newly_pressed_switches[15] array such that each entry will be 1 if there is a note
 // with that pitch somewhere on the grid which was turned on since the last time the switches were read.
-void read_switches(char* newly_pressed_switches) {
+// Returns true if at least one new switch was pressed.
+int read_switches(char* newly_pressed_switches) {
   unsigned long now = millis();
+  int return_val = false;
   digitalWrite(bypass, LOW); // deactivate bypass transistors
   
   for (int r = 0; r < 15; r++) {
@@ -74,11 +82,14 @@ void read_switches(char* newly_pressed_switches) {
       note_recently_pressed |= get_button_posedge(columns[c], &(switch_value[c][r]), &(switch_value_last_change[c][r]), now);
     }
     newly_pressed_switches[r] = note_recently_pressed;
+    return_val |= note_recently_pressed;
     
     digitalWrite(rows[r], LOW); // deactivate this row
   }
   
   digitalWrite(bypass, HIGH); // reactivate bypass transistors
+  
+  return return_val;
 }
     
 
@@ -106,6 +117,8 @@ void setup() {
       switch_value_last_change[i][j] = 0;
     }
   }
+  play_button_value = false;
+  play_button_last_change = 0;
   
   // Init serial
   Serial.begin(115200);
@@ -115,8 +128,33 @@ void run_startup() {
   // TODO: implement me
 }
 
+// This is the mode we are in when no music is playing. The user is free to flip switches.
+// When the user flips a switch, the corresponding note will play so that the user can hear
+// what it sounds like. Once the user is satisfied with their composition, they can press the
+// PLAY button to hear the song.
 void run_compose() {
-  // TODO: implement me
+  while (true) {
+    unsigned long now = millis();
+    
+    // if the play button was just pressed, then switch to play mode and exit
+    if (get_button_posedge(play_button, &play_button_value, &play_button_last_change, now)) {
+      current_mode = PLAY;
+      return;
+    }
+    
+    // Quickly read the switches, checking for any new switch presses.
+    char new_notes[15];
+    int new_switch_pressed = read_switches(new_notes);
+    // If there were new switch presses, then send them to the Pi!
+    if (new_switch_pressed) {
+      send_notes(new_notes);
+    }
+    
+    // Delay. During this time, the switches are being fully lit. So we can't make this too small or else
+    // the switches will look dim. But we also can't make it too large, or we won't detect new switch presses
+    // quickly enough.
+    delay(100); // iunno
+  }
 }
 
 void run_play() {

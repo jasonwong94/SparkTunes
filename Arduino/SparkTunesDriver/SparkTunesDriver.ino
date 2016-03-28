@@ -6,6 +6,7 @@ const int columns[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
 // pin numbers of the rows
 const int rows[15] = {33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
 
+
 // Bypass signal to activate NMOS transistors
 const int bypass = 48;
 
@@ -36,13 +37,13 @@ unsigned long switch_value_last_change[32][15];
 // value: address of the place to store the current pin value
 // last_updated: address of the place to store the time if this pin was changed
 // now: current time, in ms since startup
-int get_button_posedge(int pin, int* value, unsigned long* last_updated, unsigned long now) {
+int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsigned long now) {
   if (now - *last_updated < DEBOUNCE_DELAY) {
     // debouncing
     return false;
   }
   
-  int new_value = digitalRead(pin);
+  char new_value = digitalRead(pin);
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
@@ -66,6 +67,29 @@ void send_notes(char* notes) {
     }
   }
 }
+
+// Reads the entire switch array, all at once.
+// Updates newly_pressed_switches[15] array such that each entry will be 1 if there is a note
+// with that pitch somewhere on the grid which was turned on since the last time the switches were read.
+void read_switches(char* newly_pressed_switches) {
+  unsigned long now = millis();
+  digitalWrite(bypass, LOW); // deactivate bypass transistors
+  
+  for (int r = 0; r < 15; r++) {
+    digitalWrite(rows[r], HIGH); // activate this row
+    
+    int note_recently_pressed = false;
+    for (int c = 0; c < 32; c++) {
+      note_recently_pressed |= get_button_posedge(columns[c], &(switch_value[c][r]), &(switch_value_last_change[c][r]), now);
+    }
+    newly_pressed_switches[r] = note_recently_pressed;
+    
+    digitalWrite(rows[r], LOW); // deactivate this row
+  }
+  
+  digitalWrite(bypass, HIGH); // reactivate bypass transistors
+}
+    
 
 void setup() {
   // Init pins

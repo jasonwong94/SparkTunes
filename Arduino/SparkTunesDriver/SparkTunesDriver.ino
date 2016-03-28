@@ -7,6 +7,8 @@ const int rows[15] = {33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47
 const int bypass = 48;
 // Play button
 const int play_button = 49;
+// Tempo input
+const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 // End Pin Assignments
 
 // Other Constants
@@ -92,22 +94,52 @@ int read_switches(char* newly_pressed_switches) {
   
   return return_val;
 }
-    
+
+// gets the tempo, in # milliseconds to wait between notes
+int get_tempo() {
+  // Assuming the circuit is 5V --- 1M ---(probe here)--- POT --- GND
+  // Assuming POT varies linearly from RES_MIN to RES_MAX
+  // Assuming our wait time should also vary linearly from WAIT_MIN to WAIT_MAX
+  // Assuming larger bmp => faster
+  // V = 5V * POT / (POT + 1M)
+  // V(POT + 1M) = 5 * POT
+  // V * 1M = (5 - V) * POT
+  // POT = (V * 1M) / (5 - V)
+  // POT = (V_arduino*5/1024 * 1M) / (5 - V_arduino*5/1024)
+  // POT = (V_arduino * 1M) / (1024 - V_arduino)
+  
+  // Constants
+  const unsigned long RES_MIN = 0;
+  const unsigned long RES_MAX = 1000000;
+  const unsigned long WAIT_MIN = 250; // corresponds to bmp of 240
+  const unsigned long WAIT_MAX = 2000; // corresponds to bmp of 30
+  
+  // Get current voltage and convert to scaled resistance
+  int voltage = analogRead(tempo_pot);
+  if (voltage < 0) voltage = 0; // is this even possible?
+  if (voltage >= 1024) voltage = 1023; // is this even possible?
+  unsigned long pot_value = (voltage * 1000000) / (1024 - voltage);
+  
+  if (pot_value < RES_MIN) pot_value = RES_MIN;
+  if (pot_value > RES_MAX) pot_value = RES_MAX;
+  
+  return WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
+}
+  
 
 void setup() {
   // Init pins
-  
   for (int i = 0; i < 32; i++) {
     pinMode(columns[i], INPUT);
   }
-  
   for (int i = 0; i < 15; i++) {
     pinMode(rows[i], OUTPUT);
     digitalWrite(rows[i], LOW);
   }
-  
   pinMode(bypass, OUTPUT);
   digitalWrite(bypass, LOW);
+  pinMode(play_button, INPUT);
+  pinMode(tempo_pot, INPUT);
   
   // Init globals
   for (int i = 0; i < 32; i++) {
@@ -158,6 +190,10 @@ void run_compose() {
   }
 }
 
+// In this mode, we play the current song the user has written.
+// We stop when either:
+//   a) we've played the song the maximum # of times
+//   b) the user presses the play button again
 void run_play() {
   // TODO: implement me
 }

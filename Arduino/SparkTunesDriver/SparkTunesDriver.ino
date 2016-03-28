@@ -11,6 +11,14 @@ const int bypass = 48;
 
 // End Pin Assignments
 
+// Other Constants
+
+const int DEBOUNCE_DELAY = 200; // ms
+
+const char* note_names[15] = { "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6" };
+
+// End Other Constants
+
 // Global Variables
 
 // 1 == on, 0 == off. Indexed first by column, then by row
@@ -18,8 +26,6 @@ char switch_value[32][15];
 
 // time (in ms since startup) of last switch value change. For debouncing
 unsigned long switch_value_last_change[32][15];
-
-const int DEBOUNCE_DELAY = 200; // ms
 
 // End Global Variables
 
@@ -44,6 +50,21 @@ int get_button_posedge(int pin, int* value, unsigned long* last_updated, unsigne
   }
   
   return false;
+}
+
+// Given an array of 15 chars. Each char is treated as a bool, 1 => note on, 0 => note off
+// Sends to Pi to tell it which notes to play
+void send_notes(char* notes) {
+  int first_send_done = false;
+  for (int i = 0; i < 15; i++) {
+    if (notes[i]) {
+      if (first_send_done) {
+        Serial.print(" ");
+      }
+      Serial.print(note_names[i]);
+      first_send_done = true;
+    }
+  }
 }
 
 void setup() {

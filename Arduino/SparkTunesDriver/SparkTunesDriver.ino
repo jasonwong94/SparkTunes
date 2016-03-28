@@ -195,7 +195,36 @@ void run_compose() {
 //   a) we've played the song the maximum # of times
 //   b) the user presses the play button again
 void run_play() {
-  // TODO: implement me
+  const int MAX_PLAY_TIMES = 5; // or whatever
+  for (int i = 0; i < MAX_PLAY_TIMES; i++) {
+    for (int beat = 0; beat < 32; beat++) {
+      unsigned long start_beat = millis();
+      
+      // if the play button was just pressed, then stop playing and switch back to compose mode
+      if (get_button_posedge(play_button, &play_button_value, &play_button_last_change, start_beat)) {
+        current_mode = COMPOSE;
+        return;
+      }
+      
+      // Read the switches
+      char not_used[15];
+      read_switches(not_used);
+      
+      // Get the current tempo
+      int tempo = get_tempo();
+      
+      // Play the notes in the current beat
+      char current_notes[15];
+      for (int note = 0; note < 15; note++) {
+        current_notes[note] = switch_value[beat][note];
+      }
+      send_notes(current_notes);
+      unsigned long after_send = millis();
+      
+      unsigned long time_to_wait = tempo - (after_send - start_beat);
+      if (time_to_wait > 0) delay(time_to_wait);
+    }
+  }
 }
 
 void run_share() {

@@ -10,33 +10,32 @@ noteList = {
 	"C5":"c5.ogg"
 }
 
+noteSounds = {}
+
+def loadNoteSounds():
+	for note, filename in noteList.iteritems():
+		noteSounds[note] = pygame.mixer.Sound(filename)
+
 #list of notes to play
 
 # MSB = C5, LSB = C3
 # this function stores whatever sound files needs to be played in soundList
-def whichNoteToPlay(notes, soundList):
+def whichNoteToPlay(notes):
+	soundList = []
 	parsedNotes = notes.split(" ")
-	print parsedNotes
-	for index in range(len(parsedNotes)):
-		note = parsedNotes[index]
-		print noteList[note]
-		soundList.append( pygame.mixer.Sound(noteList[note]) )
+	#print parsedNotes
+	for note in parsedNotes:
+		#print noteList[note]
+		soundList.append( noteSounds[note] )
+	return soundList
 
 # plays the list of sounds		
 def playNotes(soundList):
-	for index in range(len(soundList)):
-		soundList[index].play()
+	for sound in soundList:
+		#print repr(sound.play())
+                sound.play()
 
 def playBeat(rawNotes):
-	soundList = []
-	print "Playing something"
-	whichNoteToPlay(rawNotes, soundList)
+	#print "Playing something"
+	soundList = whichNoteToPlay(rawNotes)
 	playNotes(soundList)
-	
-	#def want to play around with the numbers here..what's the magic number
-	time.sleep(0.35)
-	while pygame.mixer.music.get_busy():
-		print "Song is playing"
-	
-	time.sleep(0.35)
-	del soundList

@@ -63,6 +63,7 @@ void send_notes(char* notes) {
       first_send_done = true;
     }
   }
+  Serial.println(""); // newline
 }
 
 // Reads the entire switch array, all at once.

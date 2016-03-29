@@ -82,6 +82,12 @@ chord = ["C3 E3 G3 C4 E4 G4 C5",
         "C3 E3 G3 C4 E4 G4 C5",
         "C3 E3 G3 C4 E4 G4 C5"]
 
+scale = ["C3", "D3", "E3", "F3", "G3", "A3", "B3",
+        "C4", "D4", "E4", "F4", "G4", "A4", "B4",
+        "C5"] + list(reversed(["C3", "D3", "E3", "F3", "G3", "A3", "B3",
+        "C4", "D4", "E4", "F4", "G4", "A4", "B4",
+        "C5"]))
+
 slam = [" ".join([
                 "C3", "D3", "E3", "F3", "G3", "A3", "B3",
                 "C4", "D4", "E4", "F4", "G4", "A4", "B4",
@@ -100,12 +106,28 @@ def play_offset(off, sleep_s=0.2, song=sonata, repeats=5, down_octaves=1, instru
                         fluidsynth.play_NoteContainer(NoteContainer([a + "-" + str(int(b)-down_octaves) for (a, b) in song[i].split()]), channel=(i%off)+1, velocity=127)
                 time.sleep(sleep_s)
 
+def play_offset2(off, sleep_s=0.2, song=sonata, repeats=5, down_octaves=1, instrument=None):
+        song = song * repeats
+        if instrument is not None:
+                for i in range(off+1):
+                        fluidsynth.set_instrument(i+1, instrument)
+        for i in range(len(song)+off):
+                to_stop = i - off
+                if i < len(song):
+                        fluidsynth.play_NoteContainer(NoteContainer([a + "-" + str(int(b)-down_octaves) for (a, b) in song[i].split()]), channel=(i%(off+1))+1, velocity=127)
+                time.sleep(0.1)
+                if to_stop >= 0:
+                        fluidsynth.stop_NoteContainer(NoteContainer([a + "-" + str(int(b)-down_octaves) for (a, b) in song[to_stop].split()]), channel=(to_stop%(off+1))+1)
+                time.sleep(sleep_s-0.1)
+
 fluidsynth.init(os.path.join("fs", "minimal_soundfont.SF2"))
 
 # UNCOMMENT THE LINE BELOW TO TEST SONATA
-play_offset(2, song=sonata, sleep_s=0.2)
+play_offset2(1, song=sonata, sleep_s=0.2)
 
 # OR, UNCOMMECT THE LINE BELOW TO TEST CHORD
-#play_offset(2, song=chord, sleep_s=0.2)
+#play_offset2(1, song=chord, sleep_s=0.2, repeats=2)
 
-#play_offset(2, sleep_s=0.22, song=timber, repeats=5)
+#play_offset2(1, sleep_s=0.22, song=timber, repeats=5)
+
+#play_offset2(1, sleep_s=0.4, song=scale, repeats=5)

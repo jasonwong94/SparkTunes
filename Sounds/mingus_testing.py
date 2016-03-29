@@ -100,7 +100,7 @@ def play_offset(off, sleep_s=0.2, song=sonata, repeats=5, down_octaves=1, instru
                         fluidsynth.play_NoteContainer(NoteContainer([a + "-" + str(int(b)-down_octaves) for (a, b) in song[i].split()]), channel=(i%off)+1, velocity=127)
                 time.sleep(sleep_s)
 
-fluidsynth.init(os.path.join("fs", "FluidR3 GM2-2.SF2"))
+fluidsynth.init(os.path.join("fs", "minimal_soundfont.SF2"))
 
 # UNCOMMENT THE LINE BELOW TO TEST SONATA
 play_offset(2, song=sonata, sleep_s=0.2)

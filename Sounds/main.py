@@ -77,9 +77,14 @@ def test():
                 "C5"
         )
         for _ in range(5):
-                for index in range(len(chord)):
-                        if chord[index] != "":
-                                beats.playBeat(chord[index])
+                # UNCOMMENT THE LINE BELOW TO TEST SONATA
+                song = sonata
+
+                # OR, UNCOMMENT THE LINE BELOW TO TEST CHORD
+                #song = chord
+                for index in range(len(song)):
+                        if song[index] != "":
+                                beats.playBeat(song[index])
                         #beats.playBeat(' '.join(noteList))
                         #beats.playBeat(noteList[index % len(noteList)])
                         #beats.playBeat("D3 B3")

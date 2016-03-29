@@ -103,9 +103,9 @@ def play_offset(off, sleep_s=0.2, song=sonata, repeats=5, down_octaves=1, instru
 fluidsynth.init(os.path.join("fs", "FluidR3 GM2-2.SF2"))
 
 # UNCOMMENT THE LINE BELOW TO TEST SONATA
-#play_offset(2, song=sonata, sleep_s=0.2)
+play_offset(2, song=sonata, sleep_s=0.2)
 
 # OR, UNCOMMECT THE LINE BELOW TO TEST CHORD
 #play_offset(2, song=chord, sleep_s=0.2)
 
-play_offset(2, sleep_s=0.22, song=timber, repeats=5)
+#play_offset(2, sleep_s=0.22, song=timber, repeats=5)

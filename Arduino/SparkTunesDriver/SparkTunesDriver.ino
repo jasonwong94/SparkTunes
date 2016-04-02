@@ -42,8 +42,29 @@ unsigned long switch_value_last_change[32][15];
 char play_button_value;
 unsigned long play_button_last_change;
 // what mode are we in?
-int current_mode = STARTUP;
+MODE current_mode = STARTUP;
 // End Global Variables
+
+// Test the transistors controlling the rows
+void test_rows(){
+  for(int i=0; i<15; i++)
+    digitalWrite(rows[i], HIGH);
+  delay(1500);
+  for(int i=0; i<15; i++)
+    digitalWrite(rows[i], LOW);
+  delay(1500);
+}
+
+// Test the transistors controlloing the columns
+void test_columns(){
+  for(int i=0; i<32; i++)
+    digitalWrite(columns[i], HIGH);
+  delay(1500);
+  for(int i=0; i<32; i++)
+    digitalWrite(columns[i], LOW);
+  delay(1500);
+}
+
 
 // Reads the given pin, and returns true iff the value of the pin changed from 0->1 in this
 // read cycle. Also takes into account debouncing - will not return true within DEBOUNCE_DELAY
@@ -180,7 +201,9 @@ void setup() {
 }
 
 void run_startup() {
-  // TODO: implement me
+  Serial.println("run_startup");
+  test_rows();
+  test_columns();
 }
 
 // This is the mode we are in when no music is playing. The user is free to flip switches.
@@ -188,6 +211,7 @@ void run_startup() {
 // what it sounds like. Once the user is satisfied with their composition, they can press the
 // PLAY button to hear the song.
 void run_compose() {
+  Serial.println("run_compose");
   while (true) {
     unsigned long now = millis();
     
@@ -217,6 +241,7 @@ void run_compose() {
 //   a) we've played the song the maximum # of times
 //   b) the user presses the play button again
 void run_play() {
+  Serial.println("run_play");
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
     for (int beat = 0; beat < 32; beat++) {
       unsigned long start_beat = millis();
@@ -248,15 +273,20 @@ void run_play() {
 }
 
 void run_share() {
+  Serial.println("run_share");
   // TODO: implement me
 }
 
 void loop() {
-  switch (current_mode) {
-    STARTUP: run_startup(); break;
-    COMPOSE: run_compose(); break;
-    PLAY: run_play(); break;
-    SHARE: run_share(); break;
-  }
+  if(current_mode == STARTUP)
+    run_startup();
+  else if(current_mode == COMPOSE)
+    run_compose();
+  else if(current_mode == PLAY)
+    run_play();
+  else if(current_mode == SHARE)
+    run_share();
+  else
+    Serial.println("Invalid enum option!");
 }
 

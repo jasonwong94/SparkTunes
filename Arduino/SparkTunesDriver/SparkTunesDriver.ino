@@ -1,8 +1,17 @@
 // Pin Assignments
 // pin numbers of the columns
-const int columns[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+const int columns[32] = {
+  22, 24, 26, 28, 30, 32, 34, 36, 
+  38, 40, 42, 44, 46, 48, 50, 52,
+  23, 25, 27, 29, 31, 33, 35, 37,
+  39, 41, 43, 45, 47, 49, 51, 53
+  };
 // pin numbers of the rows
-const int rows[15] = {33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
+const int rows[15] = {
+  14, 15, 16, 17, 18, 19, 20, 21,  //can't use 0-7, because pins 0 and 1 are used for serial transmission
+  8, 9, 10, 11, 12, 13,
+  A8
+};
 // Bypass signal to activate NMOS transistors
 const int bypass = 48;
 // Play button

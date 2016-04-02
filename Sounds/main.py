@@ -1,4 +1,4 @@
-import time, beats, pygame
+import time, beats, pygame, serial
 
 #sandro- i'm such a noob in python....
 
@@ -89,6 +89,14 @@ def test():
                         #beats.playBeat(noteList[index % len(noteList)])
                         #beats.playBeat("D3 B3")
                         time.sleep(0.2)
+
+#replace this string
+port = '/dev/cu.usbmodem1411'
+arduino = Serial.serial(port)
+arduino.baudrate = 115200
+#give some time for the serial communication to finish setting up 
+time.sleep(1)
+arduino.write("Ready".encode())
 
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.mixer.init()

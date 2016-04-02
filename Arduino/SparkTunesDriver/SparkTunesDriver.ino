@@ -31,6 +31,7 @@ const unsigned long WAIT_MIN = 250; // corresponds to bmp of 240
 const unsigned long WAIT_MAX = 2000; // corresponds to bmp of 30
 // How many times to play a song before automatically stopping
 const int MAX_PLAY_TIMES = 5;
+
 // End Other Constants
 
 // Global Variables
@@ -43,6 +44,8 @@ char play_button_value;
 unsigned long play_button_last_change;
 // what mode are we in?
 MODE current_mode = STARTUP;
+//flag to indicate if raspberry pi is ready to receive signal
+bool piReady = false;
 // End Global Variables
 
 // Test the transistors controlling the rows
@@ -172,6 +175,17 @@ int get_tempo() {
   return WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
 }
 
+//checks to see if the Raspberry Pi is ready
+void isRaspberryPiReady(){
+  if(Serial.available() > 0){
+    String message = Serial.readString();
+    if(message = "Ready")
+      piReady = true;
+    else
+      piReady = false; 
+  }
+}
+
 void setup() {
   // Init pins
   for (int i = 0; i < 32; i++) {
@@ -201,7 +215,6 @@ void setup() {
 }
 
 void run_startup() {
-  Serial.println("run_startup");
   test_rows();
   test_columns();
 }
@@ -211,7 +224,6 @@ void run_startup() {
 // what it sounds like. Once the user is satisfied with their composition, they can press the
 // PLAY button to hear the song.
 void run_compose() {
-  Serial.println("run_compose");
   while (true) {
     unsigned long now = millis();
     
@@ -241,7 +253,6 @@ void run_compose() {
 //   a) we've played the song the maximum # of times
 //   b) the user presses the play button again
 void run_play() {
-  Serial.println("run_play");
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
     for (int beat = 0; beat < 32; beat++) {
       unsigned long start_beat = millis();
@@ -273,20 +284,24 @@ void run_play() {
 }
 
 void run_share() {
-  Serial.println("run_share");
   // TODO: implement me
 }
 
 void loop() {
-  if(current_mode == STARTUP)
-    run_startup();
-  else if(current_mode == COMPOSE)
-    run_compose();
-  else if(current_mode == PLAY)
-    run_play();
-  else if(current_mode == SHARE)
-    run_share();
-  else
-    Serial.println("Invalid enum option!");
+  if(!piReady){
+   isRaspberryPiReady();
+  }
+  else{
+    if(current_mode == STARTUP)
+      run_startup();
+    else if(current_mode == COMPOSE)
+      run_compose();
+    else if(current_mode == PLAY)
+      run_play();
+    else if(current_mode == SHARE)
+      run_share();
+    else
+      run_startup(); 
+  }
 }
 

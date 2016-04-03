@@ -189,7 +189,7 @@ void isRaspberryPiReady(){
 void setup() {
   // Init pins
   for (int i = 0; i < 32; i++) {
-    pinMode(columns[i], INPUT);
+    pinMode(columns[i], OUTPUT);
   }
   for (int i = 0; i < 15; i++) {
     pinMode(rows[i], OUTPUT);

@@ -46,7 +46,16 @@ unsigned long play_button_last_change;
 MODE current_mode = STARTUP;
 //flag to indicate if raspberry pi is ready to receive signal
 bool piReady = false;
+
+//debug flag
+bool debug = false;
 // End Global Variables
+
+// print only if we're debugging 
+void debug_print(String message){
+  if(debug)
+    Serial.println(message);
+}
 
 // Test the transistors controlling the rows
 void test_rows(){
@@ -212,26 +221,34 @@ void setup() {
   
   // Init serial
   Serial.begin(115200);
+  debug_print("Debug mode ON");
 }
 
 void run_startup() {
-// for circuitry
-//  test_rows();
-//  test_columns();
+  bool circuitry_test = false;
+  if(circuitry_test)
+    run_circuitry_test();
+  
   test_switches();
   basic_read_switches();
   
-  for(int i=0; i<15; i++){
-    Serial.print("Testing row: ");
-    Serial.print(i);
-    for(int j=0; j<32; j++){
-      Serial.print(switch_value_last_change[i][j]);
+  for(int c=0; c<32; c++){
+    debug_print("Testing column: ");
+    debug_print(String(c));
+    debug_print(" ");
+    for(int r=0; r<15; r++){
+      debug_print(String(switch_value_last_change[c][r]));
     }
-    Serial.println();
+    debug_print("\n");
   }
+}
 
-//  run_compose();
-
+//this is used to check if the transistors are properly working 
+void run_circuitry_test(){
+  test_rows();
+  digitalWrite(bypass, HIGH);
+  delay(500);
+  digitalWrite(bypass, LOW);
 }
 
 //used to check if all the switches are working (the switches need to be on)

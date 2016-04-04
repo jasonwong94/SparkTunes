@@ -48,7 +48,7 @@ MODE current_mode = STARTUP;
 bool piReady = false;
 
 //debug flag
-bool debug = false;
+bool debug = true;
 // End Global Variables
 
 // print only if we're debugging 
@@ -124,7 +124,7 @@ int basic_read_switches() {
   for (int r = 0; r < 15; r++) {
     digitalWrite(rows[r], HIGH); // activate this row
     for (int c = 0; c < 32; c++) {
-      switch_value[c][r] = digitalRead(columns[c]);
+      switch_value[c][r] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
     }
     digitalWrite(rows[r], LOW); // deactivate this row
   }
@@ -233,13 +233,12 @@ void run_startup() {
   basic_read_switches();
   
   for(int c=0; c<32; c++){
-    debug_print("Testing column: ");
-    debug_print(String(c));
-    debug_print(" ");
+    Serial.print("Column: " + String(c)+ " ");
     for(int r=0; r<15; r++){
-      debug_print(String(switch_value_last_change[c][r]));
+      Serial.print(switch_value[c][r]);
+      Serial.print("-");
     }
-    debug_print("\n");
+    Serial.println();
   }
 }
 
@@ -247,6 +246,7 @@ void run_startup() {
 void run_circuitry_test(){
   test_rows();
   digitalWrite(bypass, HIGH);
+  debug_print("Testing bypass");
   delay(500);
   digitalWrite(bypass, LOW);
 }

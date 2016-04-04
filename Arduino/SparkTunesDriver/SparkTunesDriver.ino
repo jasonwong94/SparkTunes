@@ -13,9 +13,9 @@ const int rows[15] = {
   A8
 };
 // Bypass signal to activate NMOS transistors
-const int bypass = 48;
+const int bypass = A15;
 // Play button
-const int play_button = 49;
+const int play_button = A7;
 // Tempo input
 const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 // End Pin Assignments
@@ -215,8 +215,32 @@ void setup() {
 }
 
 void run_startup() {
-  test_rows();
-  test_columns();
+// for circuitry
+//  test_rows();
+//  test_columns();
+  test_switches();
+  basic_read_switches();
+  
+  for(int i=0; i<15; i++){
+    Serial.print("Testing row: ");
+    Serial.print(i);
+    for(int j=0; j<32; j++){
+      Serial.print(switch_value_last_change[i][j]);
+    }
+    Serial.println();
+  }
+
+//  run_compose();
+
+}
+
+//used to check if all the switches are working (the switches need to be on)
+void test_switches(){
+  for(int row=0 ; row<15; row++){
+    digitalWrite(rows[row], HIGH);
+    delay(500);
+    digitalWrite(rows[row], LOW);
+  }
 }
 
 // This is the mode we are in when no music is playing. The user is free to flip switches.
@@ -244,7 +268,7 @@ void run_compose() {
     // Delay. During this time, the switches are being fully lit. So we can't make this too small or else
     // the switches will look dim. But we also can't make it too large, or we won't detect new switch presses
     // quickly enough.
-    delay(100); // iunno
+    delay(50); // iunno
   }
 }
 
@@ -288,6 +312,9 @@ void run_share() {
 }
 
 void loop() {
+  //IMPORTANT: if you are testing through a computer and not the Pi, 
+  //you must send "Ready" through the serial monitor
+  
   if(!piReady){
    isRaspberryPiReady();
   }

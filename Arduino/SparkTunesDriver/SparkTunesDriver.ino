@@ -15,13 +15,13 @@ const int rows[15] = {
 // Bypass signal to activate NMOS transistors
 const int bypass = A15;
 // Play button
-const int play_button = A7;
+const int play_button = 7;
 // Tempo input
 const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 // End Pin Assignments
 
 // Other Constants
-const int DEBOUNCE_DELAY = 200; // ms
+const long DEBOUNCE_DELAY = 200; // ms
 const char* note_names[15] = { "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6" };
 enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
 // Tempo-related constants
@@ -86,12 +86,12 @@ void test_columns(){
 // last_updated: address of the place to store the time if this pin was changed
 // now: current time, in ms since startup
 int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsigned long now) {
-  if (now - *last_updated < DEBOUNCE_DELAY) {
+  if ( (now - *last_updated) < DEBOUNCE_DELAY) {
     // debouncing
     return false;
   }
   
-  char new_value = digitalRead(pin);
+  char new_value = (digitalRead(pin) == HIGH) ? '1' : '0';
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
@@ -106,7 +106,7 @@ int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsign
 void send_notes(char* notes) {
   int first_send_done = false;
   for (int i = 0; i < 15; i++) {
-    if (notes[i]) {
+    if (notes[i] == '1') {
       if (first_send_done) {
         Serial.print(" ");
       }
@@ -181,7 +181,6 @@ int get_tempo() {
   if (pot_value < RES_MIN) pot_value = RES_MIN;
   if (pot_value > RES_MAX) pot_value = RES_MAX;
 
-  println( WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN)));
   return WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
 }
 
@@ -207,7 +206,7 @@ void setup() {
   }
   pinMode(bypass, OUTPUT);
   digitalWrite(bypass, LOW);
-  pinMode(play_button, INPUT);
+  pinMode(play_button, INPUT_PULLUP);
   pinMode(tempo_pot, INPUT);
   
   // Init globals
@@ -230,19 +229,19 @@ void run_startup() {
   if(circuitry_test)
     run_circuitry_test();
   
-//  test_switches();
-//  basic_read_switches();
-//  
-//  for(int c=0; c<32; c++){
-//    Serial.print("Column: " + String(c)+ " ");
-//    for(int r=0; r<15; r++){
-//      Serial.print(switch_value[c][r]);
-//      Serial.print("-");
-//    }
-//    Serial.println();
-//  }
+  test_switches();
+  basic_read_switches();
+  
+  for(int c=0; c<32; c++){
+    Serial.print("Column: " + String(c)+ " ");
+    for(int r=0; r<15; r++){
+      Serial.print(switch_value[c][r]);
+      Serial.print("-");
+    }
+    Serial.println();
+  }
 
-  run_play();
+  current_mode = COMPOSE;
 }
 
 //this is used to check if the transistors are properly working 
@@ -269,6 +268,7 @@ void test_switches(){
 // PLAY button to hear the song.
 void run_compose() {
   while (true) {
+    debug_print("run_compose");
     unsigned long now = millis();
     
     // if the play button was just pressed, then switch to play mode and exit
@@ -297,6 +297,7 @@ void run_compose() {
 //   a) we've played the song the maximum # of times
 //   b) the user presses the play button again
 void run_play() {
+  debug_print("run_play");
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
     for (int beat = 0; beat < 32; beat++) {
       unsigned long start_beat = millis();

@@ -176,11 +176,12 @@ int get_tempo() {
   int voltage = analogRead(tempo_pot);
   if (voltage < 0) voltage = 0; // is this even possible?
   if (voltage >= 1024) voltage = 1023; // is this even possible?
-  unsigned long pot_value = (voltage * 1000000) / (1024 - voltage);
+  double pot_value = ((double)voltage * 5/1024)/ (5 - ((double)voltage*5/1024)) *1000000;
   
   if (pot_value < RES_MIN) pot_value = RES_MIN;
   if (pot_value > RES_MAX) pot_value = RES_MAX;
-  
+
+  println( WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN)));
   return WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
 }
 
@@ -229,17 +230,19 @@ void run_startup() {
   if(circuitry_test)
     run_circuitry_test();
   
-  test_switches();
-  basic_read_switches();
-  
-  for(int c=0; c<32; c++){
-    Serial.print("Column: " + String(c)+ " ");
-    for(int r=0; r<15; r++){
-      Serial.print(switch_value[c][r]);
-      Serial.print("-");
-    }
-    Serial.println();
-  }
+//  test_switches();
+//  basic_read_switches();
+//  
+//  for(int c=0; c<32; c++){
+//    Serial.print("Column: " + String(c)+ " ");
+//    for(int r=0; r<15; r++){
+//      Serial.print(switch_value[c][r]);
+//      Serial.print("-");
+//    }
+//    Serial.println();
+//  }
+
+  run_play();
 }
 
 //this is used to check if the transistors are properly working 

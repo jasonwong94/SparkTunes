@@ -1,4 +1,4 @@
-// Pin Assignments
+re// Pin Assignments
 // pin numbers of the columns
 const int columns[32] = {
   22, 24, 26, 28, 30, 32, 34, 36, 
@@ -95,7 +95,7 @@ int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsign
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
-    return new_value;
+    return (new_value == '1') ? true: false;
   }
   
   return false;

@@ -1,4 +1,6 @@
-re// Pin Assignments
+#include <Adafruit_NeoPixel.h>
+
+// Pin Assignments
 // pin numbers of the columns
 const int columns[32] = {
   22, 24, 26, 28, 30, 32, 34, 36, 
@@ -18,9 +20,14 @@ const int bypass = A15;
 const int play_button = 7;
 // Tempo input
 const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
+// Adafruit LED strips
+const int LEDstripPin = 4;
+
 // End Pin Assignments
 
 // Other Constants
+const int LEDS_PER_STRIP = 30;
+const int NUM_STRIPS = 2;
 const long DEBOUNCE_DELAY = 200; // ms
 const char* note_names[15] = { "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6" };
 enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
@@ -35,6 +42,9 @@ const int MAX_PLAY_TIMES = 5;
 // End Other Constants
 
 // Global Variables
+//Adafruit LED strips
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LEDS_PER_STRIP*NUM_STRIPS, LEDstripPin, NEO_GRB+NEO_KHZ800);
+
 // 1 == on, 0 == off. Indexed first by column, then by row
 char switch_value[32][15];
 // time (in ms since startup) of last switch value change. For debouncing
@@ -55,6 +65,53 @@ bool debug = true;
 void debug_print(String message){
   if(debug)
     Serial.println(message);
+}
+
+//flashed LEDs all at the same time- LEDs don't have to be adjacent to each other but
+//have to be the same colour
+void ledStrips_flashLeds(int leds[], uint32_t colour[], unsigned long pulse){
+  for(int iteration = 0; iteration < 3; iteration++){
+    for(int i =0; i< sizeof(leds)/sizeof(int); i++)
+      strip.setPixelColor(leds[i], 0, 0, 0);
+    strip.show();
+    
+    delay(pulse);
+    
+    for(int i =0; i< sizeof(leds)/sizeof(int); i++)
+      strip.setPixelColor(leds[i], colour[i]);
+    strip.show();
+  }
+}
+
+//a visual indicator to indicate which iteration (out of 5) the music is playing
+void ledStrips_displayIterations(int iteration){
+  uint32_t green = strip.Color(0, 255, 100);
+  int numLEDs = LEDS_PER_STRIP*NUM_STRIPS/MAX_PLAY_TIMES;
+  int LEDs[numLEDs];
+  uint32_t LEDcolour[numLEDs];
+  
+  int upper_led = numLEDs*iteration;
+  int lower_led = (iteration == 0) ? 0 : numLEDs*(iteration -1);
+
+  //want to turn all the LEDs up to the upper_led
+  //turn of all the leds
+  for(int led=0; led<LEDS_PER_STRIP*NUM_STRIPS; led++){
+    strip.setPixelColor(led, 0, 0, 0);
+  }
+  strip.show();
+
+  for(int led=0; led<upper_led; led++){
+    strip.setPixelColor(led, green);
+  }
+  strip.show();
+
+  for(int i=0; i<numLEDs; i++){
+    LEDs[i] = lower_led;
+    LEDcolour[i] = green;
+    lower_led++;
+  }
+
+  ledStrips_flashLeds(LEDs, LEDcolour, 500);
 }
 
 // Test the transistors controlling the rows
@@ -95,7 +152,7 @@ int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsign
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
-    return (new_value == '1') ? true: false;
+    return new_value;
   }
   
   return false;
@@ -208,6 +265,10 @@ void setup() {
   digitalWrite(bypass, LOW);
   pinMode(play_button, INPUT_PULLUP);
   pinMode(tempo_pot, INPUT);
+
+  // Init led strips
+  strip.begin();
+  strip.show();
   
   // Init globals
   for (int i = 0; i < 32; i++) {
@@ -218,7 +279,7 @@ void setup() {
   basic_read_switches(); // sets initial switch values
   play_button_value = false;
   play_button_last_change = 0;
-  
+
   // Init serial
   Serial.begin(115200);
   debug_print("Debug mode ON");

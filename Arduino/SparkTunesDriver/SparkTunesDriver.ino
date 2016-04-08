@@ -31,8 +31,10 @@ const unsigned long RES_MAX = 1000000;
 const unsigned long WAIT_MIN = 250; // corresponds to bmp of 240
 const unsigned long WAIT_MAX = 2000; // corresponds to bmp of 30
 // How many times to play a song before automatically stopping
-int MAX_PLAY_TIMES = 5;
-  
+const int MAX_PLAY_TIMES = 5;
+const int TAKE_BREAK_AFTER_ROWS = 3;
+const int BREAK_LENGTH = 3; // ms
+
 // End Other Constants
 
 // Global Variables
@@ -121,27 +123,41 @@ void send_notes(char* notes) {
 
 // Reads the entire switch array, without taking into account debouncing or previous values or anything complicated
 int basic_read_switches() {
-  digitalWrite(bypass, LOW); // deactivate bypass transistors
-
+  // Kill everything
   for (int r = 0; r < 15; r++) {
     digitalWrite(rows[r], LOW);
   }
-  
+  digitalWrite(bypass, LOW); // deactivate bypass transistors
+
   for (int r = 0; r < 15; r++) {
     digitalWrite(rows[r], HIGH); // activate this row
-    delay(10);
     for (int c = 0; c < 32; c++) {
       switch_value[c][r] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
       switch_value[c][r] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
     }
-    digitalWrite(rows[r], LOW); // deactivate this row
-    delay(10);
+    digitalWrite(rows[r], LOW);
+    
+    if ((r+1) % TAKE_BREAK_AFTER_ROWS == 0) {
+      // Take a break!
+      for (int r = 0; r < 15; r++) {
+        digitalWrite(rows[r], HIGH);
+      }
+      digitalWrite(bypass, HIGH); // reactivate bypass transistors
+      
+      delay(BREAK_LENGTH);
+      
+      // Okay back to work!
+      digitalWrite(bypass, LOW); // deactivate bypass transistors
+      for (int r = 0; r < 15; r++) {
+        digitalWrite(rows[r], LOW);
+      }
+    }
   }
-
+  
+  // Restart everything
   for (int r = 0; r < 15; r++) {
     digitalWrite(rows[r], HIGH);
   }
-  
   digitalWrite(bypass, HIGH); // reactivate bypass transistors
 }
 
@@ -152,6 +168,11 @@ int basic_read_switches() {
 int read_switches(char* newly_pressed_switches) {
   unsigned long now = millis();
   int return_val = false;
+  
+  // Kill everything
+  for (int r = 0; r < 15; r++) {
+    digitalWrite(rows[r], LOW);
+  }
   digitalWrite(bypass, LOW); // deactivate bypass transistors
   
   for (int r = 0; r < 15; r++) {
@@ -165,8 +186,28 @@ int read_switches(char* newly_pressed_switches) {
     return_val |= note_recently_pressed;
     
     digitalWrite(rows[r], LOW); // deactivate this row
+    
+    if ((r+1) % TAKE_BREAK_AFTER_ROWS == 0) {
+      // Take a break!
+      for (int r = 0; r < 15; r++) {
+        digitalWrite(rows[r], HIGH);
+      }
+      digitalWrite(bypass, HIGH); // reactivate bypass transistors
+      
+      delay(BREAK_LENGTH);
+      
+      // Okay back to work!
+      digitalWrite(bypass, LOW); // deactivate bypass transistors
+      for (int r = 0; r < 15; r++) {
+        digitalWrite(rows[r], LOW);
+      }
+    }
   }
   
+  // Restart everything
+  for (int r = 0; r < 15; r++) {
+    digitalWrite(rows[r], HIGH);
+  }
   digitalWrite(bypass, HIGH); // reactivate bypass transistors
   
   return return_val;

@@ -23,7 +23,7 @@ const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 
 // Other Constants
 const int DEBOUNCE_DELAY = 200; // ms
-const char* note_names[15] = { "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6" };
+const char* note_names[15] = { "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"};
 enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
 // Tempo-related constants
 const unsigned long RES_MIN = 0;
@@ -44,12 +44,12 @@ unsigned long switch_value_last_change[32][15];
 char play_button_value;
 unsigned long play_button_last_change;
 // what mode are we in?
-MODE current_mode = STARTUP;
+MODE current_mode = PLAY;
 //flag to indicate if raspberry pi is ready to receive signal
 bool piReady = false;
 
 //debug flag
-bool debug = true;
+bool debug = false;
 // End Global Variables
 
 // print only if we're debugging 

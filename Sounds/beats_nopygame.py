@@ -41,6 +41,9 @@ def playNotes(soundList):
 
 def playBeat(rawNotes):
         #print "Playing something"
+        rawNotes = rawNotes.rstrip()
+        if len(rawNotes) == 0:
+                return
         print rawNotes
         soundList = whichNoteToPlay(rawNotes)
         playNotes(soundList)

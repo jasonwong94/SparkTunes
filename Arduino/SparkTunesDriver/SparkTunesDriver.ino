@@ -67,6 +67,13 @@ void debug_print(String message){
     Serial.println(message);
 }
 
+//clears out all the values
+void ledStrips_reset(){
+  for(int led=0; led<LEDS_PER_STRIP*NUM_STRIPS; led++)
+    strip.setPixelColor(led, 0, 0, 0);
+  strip.show();
+}
+
 //flashed LEDs all at the same time- LEDs don't have to be adjacent to each other but
 //have to be the same colour
 void ledStrips_flashLeds(int leds[], uint32_t colour[], unsigned long pulse){
@@ -93,12 +100,8 @@ void ledStrips_displayIterations(int iteration){
   int upper_led = numLEDs*iteration;
   int lower_led = (iteration == 0) ? 0 : numLEDs*(iteration -1);
 
+  ledStrips_reset();
   //want to turn all the LEDs up to the upper_led
-  //turn of all the leds
-  for(int led=0; led<LEDS_PER_STRIP*NUM_STRIPS; led++){
-    strip.setPixelColor(led, 0, 0, 0);
-  }
-  strip.show();
 
   for(int led=0; led<upper_led; led++){
     strip.setPixelColor(led, green);
@@ -112,6 +115,22 @@ void ledStrips_displayIterations(int iteration){
   }
 
   ledStrips_flashLeds(LEDs, LEDcolour, 500);
+}
+
+void ledStrips_displayPlayProgress(int beat){
+  //int offset- 
+  //random mappign feature- since we have 16 switches shared between 30 LEDs, we'll
+  //assign 2 LEDs 
+  //TODO: implement me
+  return;
+}
+
+void ledStrips_displayComposeStatus(){
+  uint32_t goldenYellow = strip.Color(255, 247, 0);
+  ledStrips_reset();
+  for(int led=0 ; led<LEDS_PER_STRIP*NUM_STRIPS; led++)
+    strip.setPixelColor(led, goldenYellow);
+
 }
 
 // Test the transistors controlling the rows
@@ -360,8 +379,12 @@ void run_compose() {
 void run_play() {
   debug_print("run_play");
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
+    // ledStrips_displayIterations(i+1);
     for (int beat = 0; beat < 32; beat++) {
       unsigned long start_beat = millis();
+      
+      //start flashing the led corresponding to the beat here
+      //TODO: call function
       
       // if the play button was just pressed, then stop playing and switch back to compose mode
       if (get_button_posedge(play_button, &play_button_value, &play_button_last_change, start_beat)) {

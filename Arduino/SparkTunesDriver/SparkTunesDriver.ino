@@ -1,11 +1,12 @@
-re// Pin Assignments
+// Pin Assignments
 // pin numbers of the columns
 const int columns[32] = {
-  22, 24, 26, 28, 30, 32, 34, 36, 
-  38, 40, 42, 44, 46, 48, 50, 52,
-  23, 25, 27, 29, 31, 33, 35, 37,
-  39, 41, 43, 45, 47, 49, 51, 53
+  22, 24, 26, 28, 30, 32, 34, 36, //panel 1 
+  38, 40, 42, 44, 46, 48, 50, 52,  //panel 2 
+  23, 25, 27, 29, 31, 33, 35, 37, //panel 3 
+  39, 41, 43, 45, 47, 49, 51, 53, //panel 4
   };
+
 // pin numbers of the rows
 const int rows[15] = {
   14, 15, 16, 17, 18, 19, 20, 21,  //can't use 0-7, because pins 0 and 1 are used for serial transmission
@@ -21,8 +22,8 @@ const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 // End Pin Assignments
 
 // Other Constants
-const long DEBOUNCE_DELAY = 200; // ms
-const char* note_names[15] = { "C4", "D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5", "E5", "F5", "G5", "A6", "B6", "C6" };
+const int DEBOUNCE_DELAY = 200; // ms
+const char* note_names[15] = { "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"};
 enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
 // Tempo-related constants
 const unsigned long RES_MIN = 0;
@@ -45,12 +46,12 @@ unsigned long switch_value_last_change[32][15];
 char play_button_value;
 unsigned long play_button_last_change;
 // what mode are we in?
-MODE current_mode = STARTUP;
+MODE current_mode = PLAY;
 //flag to indicate if raspberry pi is ready to receive signal
 bool piReady = false;
 
 //debug flag
-bool debug = true;
+bool debug = false;
 // End Global Variables
 
 // print only if we're debugging 
@@ -106,6 +107,7 @@ int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsign
 // Given an array of 15 chars. Each char is treated as a bool, 1 => note on, 0 => note off
 // Sends to Pi to tell it which notes to play
 void send_notes(char* notes) {
+  debug_print("Notes: " + String(notes) );
   int first_send_done = false;
   for (int i = 0; i < 15; i++) {
     if (notes[i] == '1') {
@@ -126,10 +128,11 @@ int basic_read_switches() {
     digitalWrite(rows[r], LOW);
   }
   digitalWrite(bypass, LOW); // deactivate bypass transistors
-  
+
   for (int r = 0; r < 15; r++) {
-    digitalWrite(rows[r], HIGH);
+    digitalWrite(rows[r], HIGH); // activate this row
     for (int c = 0; c < 32; c++) {
+      switch_value[c][r] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
       switch_value[c][r] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
     }
     digitalWrite(rows[r], LOW);
@@ -275,14 +278,78 @@ void setup() {
   debug_print("Debug mode ON");
 }
 
+int basic_check_row(int row) {
+  digitalWrite(bypass, LOW); // deactivate bypass transistors
+
+  while (true) {
+
+    for (int r = 0; r < 15; r++) {
+      digitalWrite(rows[r], row == r ? HIGH : LOW);
+    }
+    
+    for (int c = 0; c < 32; c++) {
+      switch_value[c][row] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
+    }
+  
+    Serial.print("Row: " + String(row)+ " ");
+    for(int c=0; c<32; c++){
+      Serial.print(switch_value[c][row]);
+      Serial.print("-");
+    }
+    Serial.println();
+  }
+  
+  //digitalWrite(bypass, HIGH); // reactivate bypass transistors
+}
+
+int basic_check_all_rows() {
+  digitalWrite(bypass, LOW); // deactivate bypass transistors
+
+  int row = 0;
+
+  while (true) {
+
+    if (Serial.available() > 0) {
+      String s = Serial.readString();
+      row = s.toInt();
+    }
+
+    for (int r = 0; r < 15; r++) {
+      digitalWrite(rows[r], row == r ? HIGH : LOW);
+    }
+    
+    for (int c = 0; c < 32; c++) {
+      switch_value[c][row] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
+    }
+  
+    Serial.print("Row: " + String(row)+ " ");
+    for(int c=0; c<32; c++){
+      Serial.print(switch_value[c][row]);
+      Serial.print("-");
+    }
+    Serial.println();
+  }
+  
+  //digitalWrite(bypass, HIGH); // reactivate bypass transistors
+}
+
 void run_startup() {
-  bool circuitry_test = false;
   if(circuitry_test)
     run_circuitry_test();
   
   test_switches();
-  basic_read_switches();
-  
+  basic_check_all_rows();
+
+  delay(100);
+
+  //just want to make sure it's reading the right value
+  print_switchboard_results();
+}
+
+//
+
+void print_switchboard_results(){
+  int column_to_test = 31;
   for(int c=0; c<32; c++){
     Serial.print("Column: " + String(c)+ " ");
     for(int r=0; r<15; r++){
@@ -291,8 +358,7 @@ void run_startup() {
     }
     Serial.println();
   }
-
-  current_mode = COMPOSE;
+  Serial.println();
 }
 
 //this is used to check if the transistors are properly working 
@@ -306,10 +372,12 @@ void run_circuitry_test(){
 
 //used to check if all the switches are working (the switches need to be on)
 void test_switches(){
-  for(int row=0 ; row<15; row++){
-    digitalWrite(rows[row], HIGH);
-    delay(500);
-    digitalWrite(rows[row], LOW);
+  while (true) {
+    for(int row=0 ; row<15; row++){
+      digitalWrite(rows[row], HIGH);
+      delay(500);
+      digitalWrite(rows[row], LOW);
+    }
   }
 }
 
@@ -350,6 +418,7 @@ void run_compose() {
 void run_play() {
   debug_print("run_play");
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
+    debug_print("------Iteration: " + String(i) + "-------");
     for (int beat = 0; beat < 32; beat++) {
       unsigned long start_beat = millis();
       

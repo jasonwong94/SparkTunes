@@ -23,12 +23,13 @@ def loadNoteSounds():
 # this function stores whatever sound files needs to be played in soundList
 def whichNoteToPlay(notes):
         soundList = []
-        parsedNotes = notes.split(" ")
-        #print parsedNotes
-        #for note in parsedNotes:
-                #print noteList[note]
+        parsedNotes = notes.rstrip()
+        parsedNotes = parsedNotes.split(" ")
+        print parsedNotes
+        for note in parsedNotes:
+                print noteList[note]
                 # soundList.append( noteSounds[note] )
-        #return soundList
+        return soundList
 
 # plays the list of sounds              
 def playNotes(soundList):
@@ -40,9 +41,6 @@ def playNotes(soundList):
 
 def playBeat(rawNotes):
         #print "Playing something"
-        rawNotes = rawNotes.rstrip()
-        #print rawNotes
-        if len(rawNotes) == 0:
-               return
+        print rawNotes
         soundList = whichNoteToPlay(rawNotes)
         playNotes(soundList)

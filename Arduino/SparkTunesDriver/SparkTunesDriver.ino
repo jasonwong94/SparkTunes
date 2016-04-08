@@ -1,4 +1,4 @@
-re// Pin Assignments
+// Pin Assignments
 // pin numbers of the columns
 const int columns[32] = {
   22, 24, 26, 28, 30, 32, 34, 36, //panel 1 
@@ -289,7 +289,6 @@ int basic_check_row(int row) {
     
     for (int c = 0; c < 32; c++) {
       switch_value[c][row] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
-      switch_value[c][row] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
     }
   
     Serial.print("Row: " + String(row)+ " ");
@@ -321,7 +320,6 @@ int basic_check_all_rows() {
     
     for (int c = 0; c < 32; c++) {
       switch_value[c][row] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
-      switch_value[c][row] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
     }
   
     Serial.print("Row: " + String(row)+ " ");
@@ -336,19 +334,21 @@ int basic_check_all_rows() {
 }
 
 void run_startup() {
-//  bool circuitry_test = false;
-//  MAX_PLAY_TIMES = 1; //why wait?
-//  if(circuitry_test)
-//    run_circuitry_test();
-//  
-  //test_switches();
-  //basic_read_switches();
-  //basic_check_row(0);
+  if(circuitry_test)
+    run_circuitry_test();
+  
+  test_switches();
   basic_check_all_rows();
 
   delay(100);
 
   //just want to make sure it's reading the right value
+  print_switchboard_results();
+}
+
+//
+
+void print_switchboard_results(){
   int column_to_test = 31;
   for(int c=0; c<32; c++){
     Serial.print("Column: " + String(c)+ " ");
@@ -359,8 +359,6 @@ void run_startup() {
     Serial.println();
   }
   Serial.println();
-
-//  run_play();
 }
 
 //this is used to check if the transistors are properly working 
@@ -377,8 +375,8 @@ void test_switches(){
   while (true) {
     for(int row=0 ; row<15; row++){
       digitalWrite(rows[row], HIGH);
-      //delay(500);
-      //digitalWrite(rows[row], LOW);
+      delay(500);
+      digitalWrite(rows[row], LOW);
     }
   }
 }

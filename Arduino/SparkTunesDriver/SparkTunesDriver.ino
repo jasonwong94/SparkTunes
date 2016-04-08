@@ -1,4 +1,4 @@
-// Pin Assignments
+re// Pin Assignments
 // pin numbers of the columns
 const int columns[32] = {
   22, 24, 26, 28, 30, 32, 34, 36, //panel 1 
@@ -16,7 +16,7 @@ const int rows[15] = {
 // Bypass signal to activate NMOS transistors
 const int bypass = A15;
 // Play button
-const int play_button = A7;
+const int play_button = 7;
 // Tempo input
 const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 // End Pin Assignments
@@ -87,16 +87,16 @@ void test_columns(){
 // last_updated: address of the place to store the time if this pin was changed
 // now: current time, in ms since startup
 int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsigned long now) {
-  if (now - *last_updated < DEBOUNCE_DELAY) {
+  if ( (now - *last_updated) < DEBOUNCE_DELAY) {
     // debouncing
     return false;
   }
   
-  char new_value = digitalRead(pin);
+  char new_value = (digitalRead(pin) == HIGH) ? '1' : '0';
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
-    return new_value;
+    return (new_value == '1') ? true: false;
   }
   
   return false;
@@ -189,11 +189,11 @@ int get_tempo() {
   int voltage = analogRead(tempo_pot);
   if (voltage < 0) voltage = 0; // is this even possible?
   if (voltage >= 1024) voltage = 1023; // is this even possible?
-  unsigned long pot_value = (voltage * 1000000) / (1024 - voltage);
+  double pot_value = ((double)voltage * 5/1024)/ (5 - ((double)voltage*5/1024)) *1000000;
   
   if (pot_value < RES_MIN) pot_value = RES_MIN;
   if (pot_value > RES_MAX) pot_value = RES_MAX;
-  
+
   return WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
 }
 
@@ -219,7 +219,7 @@ void setup() {
   }
   pinMode(bypass, OUTPUT);
   digitalWrite(bypass, LOW);
-  pinMode(play_button, INPUT);
+  pinMode(play_button, INPUT_PULLUP);
   pinMode(tempo_pot, INPUT);
   
   // Init globals
@@ -348,6 +348,7 @@ void test_switches(){
 // PLAY button to hear the song.
 void run_compose() {
   while (true) {
+    debug_print("run_compose");
     unsigned long now = millis();
     
     // if the play button was just pressed, then switch to play mode and exit
@@ -376,6 +377,7 @@ void run_compose() {
 //   a) we've played the song the maximum # of times
 //   b) the user presses the play button again
 void run_play() {
+  debug_print("run_play");
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
     debug_print("------Iteration: " + String(i) + "-------");
     for (int beat = 0; beat < 32; beat++) {

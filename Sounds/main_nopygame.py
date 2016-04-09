@@ -1,4 +1,4 @@
-import time, beats, pygame, serial
+import time, beats_nopygame, serial
 
 #sandro- i'm such a noob in python....
 
@@ -70,7 +70,7 @@ chord = ["C3 E3 G3 C4 E4 G4 C5",
 
 #initiate
 def test():
-        beats.loadNoteSounds()
+        beats_nopygame.loadNoteSounds()
         noteList = (
                 "C3", "D3", "E3", "F3", "G3", "A3", "B3",
                 "C4", "D4", "E4", "F4", "G4", "A4", "B4",
@@ -84,33 +84,38 @@ def test():
                 #song = chord
                 for index in range(len(song)):
                         if song[index] != "":
-                                beats.playBeat(song[index])
-                        #beats.playBeat(' '.join(noteList))
-                        #beats.playBeat(noteList[index % len(noteList)])
-                        #beats.playBeat("D3 B3")
+                                beats_nopygame.playBeat(song[index])
+                        #beats_nopygame.playBeat(' '.join(noteList))
+                        #beats_nopygame.playBeat(noteList[index % len(noteList)])
+                        #beats_nopygame.playBeat("D3 B3")
                         time.sleep(0.2)
 
 #replace this string
-port = '/dev/cu.usbmodem1411'
-arduino = Serial.serial(port)
+port = '/dev/cu.usbmodem1421'
+arduino = serial.Serial(port)
 arduino.baudrate = 115200
 #give some time for the serial communication to finish setting up 
-time.sleep(1)
-arduino.write("Ready".encode())
+time.sleep(3)
+arduino.write('Ready'.encode())
 
-pygame.mixer.pre_init(44100, -16, 2, 512)
-pygame.mixer.init()
-pygame.mixer.set_num_channels(300)
-printInitialInfo()
+# pygame.mixer.pre_init(44100, -16, 2, 512)
+# pygame.mixer.init()
+# pygame.mixer.set_num_channels(300)
+# printInitialInfo()
 timeStamp()
-
-beats.loadNoteSounds()
-if TESTFLAG:
-        test()
 
 while True:
   input = arduino.readline()
-  #print input
+  print input
   beats_nopygame.playBeat(input)
 
-pygame.mixer.quit()
+if TESTFLAG:
+        test()
+else:
+        #implement some serial communication and call beats_nopygame.playBeat 32 times...
+        # beats_nopygame.loadNoteSounds()
+        beats_nopygame.playBeat("A3 B3 C4")
+        beats_nopygame.playBeat("C3 D3 C5")
+        beats_nopygame.playBeat("C3")
+        
+#pygame.mixer.quit()

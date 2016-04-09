@@ -1,4 +1,4 @@
-import pygame, time
+import time
 
 #sandro- i'm such a noob in python....
 
@@ -13,8 +13,9 @@ noteList = {
 noteSounds = {}
 
 def loadNoteSounds():
-        for note, filename in noteList.iteritems():
-                noteSounds[note] = pygame.mixer.Sound(filename)
+        # for note, filename in noteList.iteritems():
+        # noteSounds[note] = pygame.mixer.Sound(filename)
+        return
 
 #list of notes to play
 
@@ -22,24 +23,27 @@ def loadNoteSounds():
 # this function stores whatever sound files needs to be played in soundList
 def whichNoteToPlay(notes):
         soundList = []
-        parsedNotes = notes.split(" ")
-        #print parsedNotes
+        parsedNotes = notes.rstrip()
+        parsedNotes = parsedNotes.split(" ")
+        print parsedNotes
         for note in parsedNotes:
-                #print noteList[note]
-                soundList.append( noteSounds[note] )
+                print noteList[note]
+                # soundList.append( noteSounds[note] )
         return soundList
 
 # plays the list of sounds              
 def playNotes(soundList):
-        for sound in soundList:
+        #for sound in soundList:
                 #print repr(sound.play())
-                sound.play()
+                # sound.play()
                 #sound.fadeout(900)
+        return
 
 def playBeat(rawNotes):
         #print "Playing something"
         rawNotes = rawNotes.rstrip()
         if len(rawNotes) == 0:
                 return
+        print rawNotes
         soundList = whichNoteToPlay(rawNotes)
         playNotes(soundList)

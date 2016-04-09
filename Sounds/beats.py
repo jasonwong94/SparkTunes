@@ -46,10 +46,12 @@ def playBeat(rawNotes):
         #print "Playing something"
         rawNotes = rawNotes.rstrip()
         if len(rawNotes) == 0:
+                print "No notes detected- rest"
                 return
         elif rawNotes == "Easter Egg":
                 print "Playing Easter Egg"
                 soundList = playEasterEgg()
         else:
+                print "Playing note(s)"
                 soundList = whichNoteToPlay(rawNotes)
         playNotes(soundList)

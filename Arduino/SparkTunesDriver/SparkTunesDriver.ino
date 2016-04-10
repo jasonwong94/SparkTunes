@@ -48,7 +48,7 @@ const int READ_DELAY = 24;
 
 // Global Variables
 //Adafruit LED strips
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LEDS_PER_STRIP*NUM_STRIPS, LEDstripPin, NEO_GRB+NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(MAX_NUM_LEDS, LEDstripPin, NEO_GRB+NEO_KHZ800);
 
 // 1 == on, 0 == off. Indexed first by column, then by row
 char switch_value[32][15];
@@ -524,28 +524,6 @@ void run_play() {
     if ((millis() - start_beat) >= tempo) {
       start_beat = millis();
 
-  for (int i = 0; i < MAX_PLAY_TIMES; i++) {
-    ledStrips_displayIterations(&strip, i);
-    debug_print("------Iteration: " + String(i) + "-------");
-    for (int beat = 0; beat < 32; beat++) {
-      unsigned long start_beat = millis();
-      
-      //start flashing the led corresponding to the beat here
-      //TODO: call function
-      
-      // if the play button was just pressed, then stop playing and switch back to compose mode
-      if (get_button_posedge(play_button, &play_button_value, &play_button_last_change, start_beat)) {
-        current_mode = COMPOSE;
-        return;
-      }
-      
-      // Read the switches
-      basic_read_switches();
-      
-      // Get the current tempo
-      int tempo = get_tempo();
-      
->>>>>>> cbab949699e0cd3f3dda6384dc4cf7f720b78ccf
       // Play the notes in the current beat
       char current_notes[15];
       for (int note = 0; note < 15; note++) {

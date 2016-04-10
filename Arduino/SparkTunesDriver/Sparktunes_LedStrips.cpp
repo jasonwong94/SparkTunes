@@ -107,17 +107,24 @@ void ledStrips_displayIterations(Adafruit_NeoPixel *strip, int iteration) {
 }
 
 void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat) {
-  //int offset-
-  //random mappign feature- since we have 16 switches shared between 30 LEDs, we'll
-  //assign 2 LEDs
-  //TODO: implement me
+  int num_beats = 32;
+  int turn_on_up_to = beat * MAX_NUM_LEDS / num_beats;
+  const int ON_COLOR = strip->Color(0,255,0);
+  const int OFF_COLOR = strip->Color(0,0,0);
+  
+  for (int i = 0; i < MAX_NUM_LEDS; i++) {
+    int on = (i >= (MAX_NUM_LEDS - turn_on_up_to));
+    strip->setPixelColor(i, on ? ON_COLOR : OFF_COLOR);
+  }
+  strip->show();
+
   return;
 }
 
 void ledStrips_displayComposeStatus(Adafruit_NeoPixel *strip) {
   uint32_t goldenYellow = strip->Color(255, 247, 0);
   ledStrips_reset(strip);
-  for (int led = 0 ; led < LEDS_PER_STRIP * NUM_STRIPS; led++)
+  for (int led = 0 ; led < MAX_NUM_LEDS; led++)
     strip->setPixelColor(led, goldenYellow);
   strip->show();
 }

@@ -2,9 +2,7 @@
 
 #ifndef SPARKTUNES_LEDSTRIPS_H
 #define SPARKTUNES_LEDSTRIPS_H
-  const int LEDS_PER_STRIP = 30;
-  const int NUM_STRIPS = 2;
-  const int MAX_NUM_LEDS = LEDS_PER_STRIP*2; //change if need be
+  const int MAX_NUM_LEDS = 58; //change if need be
   const int PULSE_ITERATION = 3;
 
   void ledStrips_test(Adafruit_NeoPixel *strip);

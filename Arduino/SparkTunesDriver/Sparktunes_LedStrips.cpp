@@ -44,21 +44,38 @@ void ledStrips_test(Adafruit_NeoPixel *strip) {
 
 //clears out all the values
 void ledStrips_reset(Adafruit_NeoPixel *strip) {
-  for (int led = 0; led < MAX_NUM_LEDS; led++)
-    strip->setPixelColor(led, 0, 0, 0);
+  ledStrips_setColour(strip, strip->Color(0,0,0) );
+}
+
+//flash LEDs 3 times of the SAME colour. Accepts an array of LED indexes. 
+void ledStrips_setColour(Adafruit_NeoPixel *strip, int leds[], uint32_t colour){
+  ledStrips_reset(strip);
+  for (int i = 0; i < sizeof(leds) / sizeof(int); i++)
+    strip->setPixelColor(leds[i], colour);
+  strip->show();
+}
+
+void ledStrips_setColour(Adafruit_NeoPixel *strip, uint32_t colour){
+  ledStrips_reset(strip);
+  for (int i = 0; i < MAX_NUM_LEDS; i++)
+    strip->setPixelColor(i, colour);
+  strip->show();
+}
+
+void ledStrips_setColour(Adafruit_NeoPixel *strip, int leds[], uint32_t colour[]){
+  ledStrips_reset(strip);
+  for (int i = 0; i < sizeof(leds) / sizeof(int); i++)
+    strip->setPixelColor(leds[i], colour[i]);
   strip->show();
 }
 
 //flash LEDs 3 times. Accepts an array of LED indexes. Each LED needs to be mapped a colour
 void ledStrips_flashLeds(Adafruit_NeoPixel *strip, int leds[], uint32_t colour[], unsigned long pulse) {
-  for (int iteration = 0; iteration < 3; iteration++) {
+  for (int iteration = 0; iteration < PULSE_ITERATION; iteration++) {
     ledStrips_reset(strip);
-
     delay(pulse);
-
-    for (int i = 0; i < sizeof(leds) / sizeof(int); i++)
-      strip->setPixelColor(leds[i], colour[i]);
-    strip->show();
+    ledStrips_setColour(strip, leds, colour);
+    delay(pulse);
   }
 }
 

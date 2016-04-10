@@ -90,16 +90,28 @@ void test_columns(){
 // last_updated: address of the place to store the time if this pin was changed
 // now: current time, in ms since startup
 int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsigned long now) {
+  if (pin == play_button) {
+    Serial.print("Last time: ");
+    Serial.println(*last_updated);
+    Serial.print("Now: ");
+    Serial.println(now);
+  }
   if ( (now - *last_updated) < DEBOUNCE_DELAY) {
     // debouncing
     return false;
   }
   
-  char new_value = (digitalRead(pin) == HIGH) ? '1' : '0';
+  char new_value = digitalRead(pin);
+  if (pin == play_button) {
+    Serial.print("Current: ");
+    Serial.println(new_value);
+    Serial.print("Previous: ");
+    Serial.println(*value);
+  }
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
-    return (new_value == '1') ? true: false;
+    return new_value;
   }
   
   return false;

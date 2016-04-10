@@ -4,6 +4,8 @@ import pygame, time
 
 #list of filenames of notes that the user can toggle
 
+easterEggFile = "easterEgg_short.ogg"
+
 noteList = {
         "C3":"c3.ogg", "D3":"d3.ogg", "E3":"e3.ogg", "F3":"f3.ogg", "G3":"g3.ogg", "A3":"a3.ogg", "B3":"b3.ogg",
         "C4":"c4.ogg", "D4":"d4.ogg", "E4":"e4.ogg", "F4":"f4.ogg", "G4":"g4.ogg", "A4":"a4.ogg", "B4":"b4.ogg",
@@ -36,10 +38,20 @@ def playNotes(soundList):
                 sound.play()
                 #sound.fadeout(900)
 
+def playEasterEgg():
+        soundList = []
+        soundList.append(pygame.mixer.Sound(easterEggFile))
+
 def playBeat(rawNotes):
         #print "Playing something"
         rawNotes = rawNotes.rstrip()
         if len(rawNotes) == 0:
+                print "No notes detected- rest"
                 return
-        soundList = whichNoteToPlay(rawNotes)
+        elif rawNotes == "Easter Egg":
+                print "Playing Easter Egg"
+                soundList = playEasterEgg()
+        else:
+                print "Playing note(s)"
+                soundList = whichNoteToPlay(rawNotes)
         playNotes(soundList)

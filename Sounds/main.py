@@ -4,7 +4,7 @@ import time, beats, pygame, serial
 
 #some logging file for stat collections, just like Ready Set Step..
 timeStampFile = open("timeStamp.txt", "a+")
-
+arduino = None
 TESTFLAG = True
 
 def printInitialInfo():
@@ -91,26 +91,42 @@ def test():
                         time.sleep(0.2)
 
 #replace this string
-port = '/dev/cu.usbmodem1411'
-arduino = Serial.serial(port)
-arduino.baudrate = 115200
-#give some time for the serial communication to finish setting up 
-time.sleep(1)
-arduino.write("Ready".encode())
+port = '/dev/cu.usbmodem1421'
 
-pygame.mixer.pre_init(44100, -16, 2, 512)
-pygame.mixer.init()
-pygame.mixer.set_num_channels(300)
-printInitialInfo()
-timeStamp()
+def connectToArduino(portName):
+  try: 
+    global arduino
+    arduino = serial.Serial(portName)
+    return True
+  except:
+    print "Failed to connect to Arduino ",portName
+    return False
 
-beats.loadNoteSounds()
-if TESTFLAG:
-        test()
 
-while True:
-  input = arduino.readline()
-  #print input
-  beats_nopygame.playBeat(input)
+while True: 
+  if connectToArduino(port):
+    arduino.baudrate = 115200
+    #give some time for the serial communication to finish setting up 
+    time.sleep(1)
+    arduino.write("Ready".encode())
 
-pygame.mixer.quit()
+    pygame.mixer.pre_init(44100, -16, 2, 512)
+    pygame.mixer.init()
+    pygame.mixer.set_num_channels(300)
+
+    printInitialInfo()
+    timeStamp()
+
+    beats.loadNoteSounds()
+    if TESTFLAG:
+            test()
+
+    while True:
+      input = arduino.readline()
+      #print input
+      beats.playBeat(input)
+
+    pygame.mixer.quit()
+  else:
+    time.sleep(1)
+    connectToArduino(port)

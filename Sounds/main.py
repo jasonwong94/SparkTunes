@@ -124,7 +124,7 @@ while True:
     while True:
       input = arduino.readline()
       #print input
-      beats_nopygame.playBeat(input)
+      beats.playBeat(input)
 
     pygame.mixer.quit()
   else:

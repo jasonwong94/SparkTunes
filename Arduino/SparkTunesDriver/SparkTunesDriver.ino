@@ -28,12 +28,13 @@ enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
 // Tempo-related constants
 const unsigned long RES_MIN = 0;
 const unsigned long RES_MAX = 1000000;
-const unsigned long WAIT_MIN = 250; // corresponds to bmp of 240
-const unsigned long WAIT_MAX = 2000; // corresponds to bmp of 30
+const unsigned long WAIT_MIN = 100; // corresponds to bmp of quarter = 150, if our notes are sixteenths
+const unsigned long WAIT_MAX = 600; // 500 corresponds to bmp of quarter = 30, if our notes are sisteenths. Add a little bit because reasons.
 // How many times to play a song before automatically stopping
 const int MAX_PLAY_TIMES = 5;
-const int TAKE_BREAK_AFTER_ROWS = 3;
-const int BREAK_LENGTH = 3; // ms
+const int TAKE_BREAK_AFTER_ROWS = 1;
+const int BREAK_LENGTH = 5; // ms
+const int READ_DELAY = 24;
 
 // End Other Constants
 
@@ -46,12 +47,12 @@ unsigned long switch_value_last_change[32][15];
 char play_button_value;
 unsigned long play_button_last_change;
 // what mode are we in?
-MODE current_mode = PLAY;
+MODE current_mode = COMPOSE;
 //flag to indicate if raspberry pi is ready to receive signal
 bool piReady = false;
 
 //debug flag
-bool debug = false;
+bool debug = true;
 // End Global Variables
 
 // print only if we're debugging 
@@ -89,16 +90,28 @@ void test_columns(){
 // last_updated: address of the place to store the time if this pin was changed
 // now: current time, in ms since startup
 int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsigned long now) {
+  if (pin == play_button) {
+    Serial.print("Last time: ");
+    Serial.println(*last_updated);
+    Serial.print("Now: ");
+    Serial.println(now);
+  }
   if ( (now - *last_updated) < DEBOUNCE_DELAY) {
     // debouncing
     return false;
   }
   
-  char new_value = (digitalRead(pin) == HIGH) ? '1' : '0';
+  char new_value = digitalRead(pin);
+  if (pin == play_button) {
+    Serial.print("Current: ");
+    Serial.println(new_value);
+    Serial.print("Previous: ");
+    Serial.println(*value);
+  }
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
-    return (new_value == '1') ? true: false;
+    return new_value;
   }
   
   return false;
@@ -110,7 +123,7 @@ void send_notes(char* notes) {
   debug_print("Notes: " + String(notes) );
   int first_send_done = false;
   for (int i = 0; i < 15; i++) {
-    if (notes[i] == '1') {
+    if (notes[i]) {
       if (first_send_done) {
         Serial.print(" ");
       }
@@ -128,12 +141,18 @@ int basic_read_switches() {
     digitalWrite(rows[r], LOW);
   }
   digitalWrite(bypass, LOW); // deactivate bypass transistors
+  delay(1); // remove me!
 
   for (int r = 0; r < 15; r++) {
     digitalWrite(rows[r], HIGH); // activate this row
+    
+    // read a bunch of stuff for no reason
+    for (int x = 0; x < READ_DELAY; x++) {
+      digitalRead(rows[r]);
+    }
+    
     for (int c = 0; c < 32; c++) {
-      switch_value[c][r] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
-      switch_value[c][r] = (digitalRead(columns[c]) == HIGH) ? '1' : '0';
+      switch_value[c][r] = (digitalRead(columns[c]) == HIGH);
     }
     digitalWrite(rows[r], LOW);
     
@@ -143,11 +162,13 @@ int basic_read_switches() {
         digitalWrite(rows[r], HIGH);
       }
       digitalWrite(bypass, HIGH); // reactivate bypass transistors
+      delay(1); // remove me!
       
       delay(BREAK_LENGTH);
       
       // Okay back to work!
       digitalWrite(bypass, LOW); // deactivate bypass transistors
+      delay(1); // remove me!
       for (int r = 0; r < 15; r++) {
         digitalWrite(rows[r], LOW);
       }
@@ -159,6 +180,7 @@ int basic_read_switches() {
     digitalWrite(rows[r], HIGH);
   }
   digitalWrite(bypass, HIGH); // reactivate bypass transistors
+  delay(1); // remove me!
 }
 
 // Reads the entire switch array, all at once.
@@ -174,12 +196,19 @@ int read_switches(char* newly_pressed_switches) {
     digitalWrite(rows[r], LOW);
   }
   digitalWrite(bypass, LOW); // deactivate bypass transistors
+  delay(1); // remove me!
   
   for (int r = 0; r < 15; r++) {
     digitalWrite(rows[r], HIGH); // activate this row
     
+    // read a bunch of stuff for no reason
+    for (int x = 0; x < READ_DELAY; x++) {
+      digitalRead(rows[r]);
+    }
+    
     int note_recently_pressed = false;
     for (int c = 0; c < 32; c++) {
+      //delay(1);
       note_recently_pressed |= get_button_posedge(columns[c], &(switch_value[c][r]), &(switch_value_last_change[c][r]), now);
     }
     newly_pressed_switches[r] = note_recently_pressed;
@@ -193,11 +222,13 @@ int read_switches(char* newly_pressed_switches) {
         digitalWrite(rows[r], HIGH);
       }
       digitalWrite(bypass, HIGH); // reactivate bypass transistors
+      delay(1); // remove me!
       
       delay(BREAK_LENGTH);
       
       // Okay back to work!
       digitalWrite(bypass, LOW); // deactivate bypass transistors
+      delay(1); // remove me!
       for (int r = 0; r < 15; r++) {
         digitalWrite(rows[r], LOW);
       }
@@ -209,6 +240,15 @@ int read_switches(char* newly_pressed_switches) {
     digitalWrite(rows[r], HIGH);
   }
   digitalWrite(bypass, HIGH); // reactivate bypass transistors
+  delay(1); // remove me!
+  
+//  int row = 0;
+//  Serial.print("Row: " + String(row)+ " ");
+//  for(int c=0; c<32; c++){
+//    Serial.print(switch_value[c][row]);
+//    Serial.print("-");
+//  }
+//  Serial.println();
   
   return return_val;
 }
@@ -234,8 +274,14 @@ int get_tempo() {
   
   if (pot_value < RES_MIN) pot_value = RES_MIN;
   if (pot_value > RES_MAX) pot_value = RES_MAX;
+  
+  int tempo = WAIT_MIN + ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
+  //Serial.print("Tempo: ");
+  //Serial.println(tempo);
+  //Serial.print("Voltage: ");
+  //Serial.println(voltage);
 
-  return WAIT_MAX - ((pot_value - RES_MIN) * (WAIT_MAX - WAIT_MIN) / (RES_MAX - RES_MIN));
+  return tempo;
 }
 
 //checks to see if the Raspberry Pi is ready
@@ -252,7 +298,7 @@ void isRaspberryPiReady(){
 void setup() {
   // Init pins
   for (int i = 0; i < 32; i++) {
-    pinMode(columns[i], OUTPUT);
+    pinMode(columns[i], INPUT);
   }
   for (int i = 0; i < 15; i++) {
     pinMode(rows[i], OUTPUT);
@@ -270,7 +316,7 @@ void setup() {
     }
   }
   basic_read_switches(); // sets initial switch values
-  play_button_value = false;
+  play_button_value = true;
   play_button_last_change = 0;
   
   // Init serial
@@ -280,6 +326,7 @@ void setup() {
 
 int basic_check_row(int row) {
   digitalWrite(bypass, LOW); // deactivate bypass transistors
+  delay(1); // remove me!
 
   while (true) {
 
@@ -304,6 +351,7 @@ int basic_check_row(int row) {
 
 int basic_check_all_rows() {
   digitalWrite(bypass, LOW); // deactivate bypass transistors
+  delay(1); // remove me!
 
   int row = 0;
 
@@ -334,6 +382,7 @@ int basic_check_all_rows() {
 }
 
 void run_startup() {
+  int circuitry_test = false;
   if(circuitry_test)
     run_circuitry_test();
   
@@ -365,9 +414,11 @@ void print_switchboard_results(){
 void run_circuitry_test(){
   test_rows();
   digitalWrite(bypass, HIGH);
+  delay(1); // remove me!
   debug_print("Testing bypass");
   delay(500);
   digitalWrite(bypass, LOW);
+  delay(1); // remove me!
 }
 
 //used to check if all the switches are working (the switches need to be on)
@@ -386,6 +437,8 @@ void test_switches(){
 // what it sounds like. Once the user is satisfied with their composition, they can press the
 // PLAY button to hear the song.
 void run_compose() {
+  char ignored_notes[15];
+  read_switches(ignored_notes);
   while (true) {
     debug_print("run_compose");
     unsigned long now = millis();
@@ -407,7 +460,7 @@ void run_compose() {
     // Delay. During this time, the switches are being fully lit. So we can't make this too small or else
     // the switches will look dim. But we also can't make it too large, or we won't detect new switch presses
     // quickly enough.
-    delay(50); // iunno
+    //delay(50); // iunno
   }
 }
 
@@ -417,35 +470,44 @@ void run_compose() {
 //   b) the user presses the play button again
 void run_play() {
   debug_print("run_play");
-  for (int i = 0; i < MAX_PLAY_TIMES; i++) {
-    debug_print("------Iteration: " + String(i) + "-------");
-    for (int beat = 0; beat < 32; beat++) {
-      unsigned long start_beat = millis();
-      
-      // if the play button was just pressed, then stop playing and switch back to compose mode
-      if (get_button_posedge(play_button, &play_button_value, &play_button_last_change, start_beat)) {
-        current_mode = COMPOSE;
-        return;
-      }
-      
-      // Read the switches
-      basic_read_switches();
-      
-      // Get the current tempo
-      int tempo = get_tempo();
-      
+  
+  unsigned long start_beat = millis();
+  // Play the first beat
+  basic_read_switches();
+  char current_notes[15];
+  for (int note = 0; note < 15; note++) {
+    current_notes[note] = switch_value[0][note];
+  }
+  send_notes(current_notes);
+  
+  unsigned long beat = 1;
+  while (beat < 32 * MAX_PLAY_TIMES) { // play the rest of the beats
+    
+    // if the play button was just pressed, then stop playing and switch back to compose mode
+    if (get_button_posedge(play_button, &play_button_value, &play_button_last_change, millis())) {
+      current_mode = COMPOSE;
+      return;
+    }
+    
+    // Read the switches
+    basic_read_switches();
+    
+    // Get the current tempo
+    int tempo = get_tempo();
+    
+    if ((millis() - start_beat) >= tempo) {
+      start_beat = millis();
       // Play the notes in the current beat
       char current_notes[15];
       for (int note = 0; note < 15; note++) {
-        current_notes[note] = switch_value[beat][note];
+        current_notes[note] = switch_value[beat % 32][note];
       }
       send_notes(current_notes);
-      unsigned long after_send = millis();
-      
-      unsigned long time_to_wait = tempo - (after_send - start_beat);
-      if (time_to_wait > 0) delay(time_to_wait);
+      beat++;
     }
   }
+    
+  current_mode = COMPOSE;
 }
 
 void run_share() {
@@ -455,6 +517,8 @@ void run_share() {
 void loop() {
   //IMPORTANT: if you are testing through a computer and not the Pi, 
   //you must send "Ready" through the serial monitor
+  
+  //basic_check_all_rows();
   
   if(!piReady){
    isRaspberryPiReady();

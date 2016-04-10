@@ -28,7 +28,8 @@ def whichNoteToPlay(notes):
         #print parsedNotes
         for note in parsedNotes:
                 #print noteList[note]
-                soundList.append( noteSounds[note] )
+                if note in noteSounds:
+                        soundList.append( noteSounds[note] )
         return soundList
 
 # plays the list of sounds              

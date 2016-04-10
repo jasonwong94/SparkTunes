@@ -104,13 +104,13 @@ pygame.mixer.set_num_channels(300)
 printInitialInfo()
 timeStamp()
 
+beats.loadNoteSounds()
 if TESTFLAG:
         test()
-else:
-        #implement some serial communication and call beats.playBeat 32 times...
-        beats.loadNoteSounds()
-        beats.playBeat("A3 B3 C4")
-        beats.playBeat("C3 D3 C5")
-        beats.playBeat("C3")
-        
+
+while True:
+  input = arduino.readline()
+  #print input
+  beats_nopygame.playBeat(input)
+
 pygame.mixer.quit()

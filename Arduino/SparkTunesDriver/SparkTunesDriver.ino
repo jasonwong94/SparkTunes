@@ -255,10 +255,14 @@ int get_tempo() {
 void isRaspberryPiReady(){
   if(Serial.available() > 0){
     String message = Serial.readString();
-    if(message = "Ready")
+    if(message = "Ready"){
       piReady = true;
-    else
+      ledStrips_setColour(&strip, strip.Color(0, 255, 0) );
+    }
+    else{
       piReady = false; 
+      ledStrips_setColour(&strip, strip.Color(0, 0, 255) );
+    }
   }
 }
 
@@ -279,6 +283,9 @@ void setup() {
   // Init led strips
   strip.begin();
   strip.show();
+
+  //test strips
+  ledStrips_test(&strip);
   
   // Init globals
   for (int i = 0; i < 32; i++) {
@@ -412,6 +419,8 @@ void run_compose() {
       current_mode = PLAY;
       return;
     }
+
+    ledStrips_displayComposeStatus(&strip);
     
     // Quickly read the switches, checking for any new switch presses.
     char new_notes[15];
@@ -435,6 +444,7 @@ void run_compose() {
 void run_play() {
   debug_print("run_play");
   for (int i = 0; i < MAX_PLAY_TIMES; i++) {
+    ledStrips_displayIterations(&strip, i);
     debug_print("------Iteration: " + String(i) + "-------");
     for (int beat = 0; beat < 32; beat++) {
       unsigned long start_beat = millis();

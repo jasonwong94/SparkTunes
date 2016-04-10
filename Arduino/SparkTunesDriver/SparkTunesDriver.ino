@@ -1,3 +1,6 @@
+#include <Adafruit_NeoPixel.h>
+#include "SparkTunes_LedStrips.h"
+
 // Pin Assignments
 // pin numbers of the columns
 const int columns[32] = {
@@ -19,10 +22,15 @@ const int bypass = A15;
 const int play_button = 7;
 // Tempo input
 const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
+// Adafruit LED strips
+const int LEDstripPin = 4;
+
 // End Pin Assignments
 
 // Other Constants
-const int DEBOUNCE_DELAY = 200; // ms
+//const int LEDS_PER_STRIP = 30;
+//const int NUM_STRIPS = 2;
+const long DEBOUNCE_DELAY = 200; // ms
 const char* note_names[15] = { "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"};
 enum MODE { STARTUP, COMPOSE, PLAY, SHARE };
 // Tempo-related constants
@@ -39,6 +47,9 @@ const int READ_DELAY = 24;
 // End Other Constants
 
 // Global Variables
+//Adafruit LED strips
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LEDS_PER_STRIP*NUM_STRIPS, LEDstripPin, NEO_GRB+NEO_KHZ800);
+
 // 1 == on, 0 == off. Indexed first by column, then by row
 char switch_value[32][15];
 // time (in ms since startup) of last switch value change. For debouncing
@@ -53,6 +64,7 @@ bool piReady = false;
 
 //debug flag
 bool debug = true;
+bool circuitry_test = false;
 // End Global Variables
 
 // print only if we're debugging 
@@ -60,6 +72,7 @@ void debug_print(String message){
   if(debug)
     Serial.println(message);
 }
+
 
 // Test the transistors controlling the rows
 void test_rows(){
@@ -288,10 +301,14 @@ int get_tempo() {
 void isRaspberryPiReady(){
   if(Serial.available() > 0){
     String message = Serial.readString();
-    if(message = "Ready")
+    if(message = "Ready"){
       piReady = true;
-    else
+      ledStrips_setColour(&strip, strip.Color(0, 255, 0) );
+    }
+    else{
       piReady = false; 
+      ledStrips_setColour(&strip, strip.Color(0, 0, 255) );
+    }
   }
 }
 
@@ -308,6 +325,13 @@ void setup() {
   digitalWrite(bypass, LOW);
   pinMode(play_button, INPUT_PULLUP);
   pinMode(tempo_pot, INPUT);
+
+  // Init led strips
+  strip.begin();
+  strip.show();
+
+  //test strips
+  ledStrips_test(&strip);
   
   // Init globals
   for (int i = 0; i < 32; i++) {
@@ -318,7 +342,7 @@ void setup() {
   basic_read_switches(); // sets initial switch values
   play_button_value = true;
   play_button_last_change = 0;
-  
+
   // Init serial
   Serial.begin(115200);
   debug_print("Debug mode ON");
@@ -448,6 +472,8 @@ void run_compose() {
       current_mode = PLAY;
       return;
     }
+
+    ledStrips_displayComposeStatus(&strip);
     
     // Quickly read the switches, checking for any new switch presses.
     char new_notes[15];
@@ -497,6 +523,29 @@ void run_play() {
     
     if ((millis() - start_beat) >= tempo) {
       start_beat = millis();
+
+  for (int i = 0; i < MAX_PLAY_TIMES; i++) {
+    ledStrips_displayIterations(&strip, i);
+    debug_print("------Iteration: " + String(i) + "-------");
+    for (int beat = 0; beat < 32; beat++) {
+      unsigned long start_beat = millis();
+      
+      //start flashing the led corresponding to the beat here
+      //TODO: call function
+      
+      // if the play button was just pressed, then stop playing and switch back to compose mode
+      if (get_button_posedge(play_button, &play_button_value, &play_button_last_change, start_beat)) {
+        current_mode = COMPOSE;
+        return;
+      }
+      
+      // Read the switches
+      basic_read_switches();
+      
+      // Get the current tempo
+      int tempo = get_tempo();
+      
+>>>>>>> cbab949699e0cd3f3dda6384dc4cf7f720b78ccf
       // Play the notes in the current beat
       char current_notes[15];
       for (int note = 0; note < 15; note++) {

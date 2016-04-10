@@ -32,8 +32,8 @@ const unsigned long WAIT_MIN = 100; // corresponds to bmp of quarter = 150, if o
 const unsigned long WAIT_MAX = 600; // 500 corresponds to bmp of quarter = 30, if our notes are sisteenths. Add a little bit because reasons.
 // How many times to play a song before automatically stopping
 const int MAX_PLAY_TIMES = 5;
-const int TAKE_BREAK_AFTER_ROWS = 3;
-const int BREAK_LENGTH = 10; // ms
+const int TAKE_BREAK_AFTER_ROWS = 1;
+const int BREAK_LENGTH = 5; // ms
 const int READ_DELAY = 24;
 
 // End Other Constants
@@ -286,7 +286,7 @@ void isRaspberryPiReady(){
 void setup() {
   // Init pins
   for (int i = 0; i < 32; i++) {
-    pinMode(columns[i], OUTPUT);
+    pinMode(columns[i], INPUT);
   }
   for (int i = 0; i < 15; i++) {
     pinMode(rows[i], OUTPUT);
@@ -304,7 +304,7 @@ void setup() {
     }
   }
   basic_read_switches(); // sets initial switch values
-  play_button_value = false;
+  play_button_value = true;
   play_button_last_change = 0;
   
   // Init serial

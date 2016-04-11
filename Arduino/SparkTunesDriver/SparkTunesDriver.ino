@@ -43,6 +43,7 @@ const int MAX_PLAY_TIMES = 5;
 const int TAKE_BREAK_AFTER_ROWS = 1;
 const int BREAK_LENGTH = 5; // ms
 const int READ_DELAY = 24;
+const int MAX_SWITCHES = 480/4; // 15 rows x 32
 
 // End Other Constants
 
@@ -50,6 +51,8 @@ const int READ_DELAY = 24;
 //Adafruit LED strips
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(MAX_NUM_LEDS, LEDstripPin, NEO_GRB+NEO_KHZ800);
 
+//
+int num_switches_on = 0;
 // 1 == on, 0 == off. Indexed first by column, then by row
 char switch_value[32][15];
 // time (in ms since startup) of last switch value change. For debouncing
@@ -61,6 +64,8 @@ unsigned long play_button_last_change;
 MODE current_mode = COMPOSE;
 //flag to indicate if raspberry pi is ready to receive signal
 bool piReady = false;
+bool easter_egg_activated = false;
+bool easter_egg_toggled_once = false;
 
 //debug flag
 bool debug = true;
@@ -73,6 +78,16 @@ void debug_print(String message){
     Serial.println(message);
 }
 
+void check_easter_egg(){
+  num_switches_on = 0;
+  for(int col=0; col<32; col++){
+    for(int row=0; row<15; row++){
+      if(switch_value[col][row] == HIGH)
+        num_switches_on++;
+    }
+  }
+  Serial.println(num_switches_on);
+}
 
 // Test the transistors controlling the rows
 void test_rows(){
@@ -123,6 +138,7 @@ int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsign
 void send_notes(char* notes) {
   debug_print("Notes: " + String(notes) );
   int first_send_done = false;
+  
   for (int i = 0; i < 15; i++) {
     if (notes[i]) {
       if (first_send_done) {
@@ -132,7 +148,7 @@ void send_notes(char* notes) {
       first_send_done = true;
     }
   }
-  Serial.println(""); // newline
+  Serial.println(""); // newline 
 }
 
 // Reads the entire switch array, without taking into account debouncing or previous values or anything complicated
@@ -495,6 +511,12 @@ void run_play() {
   basic_read_switches();
   unsigned long start_beat = millis();
   char current_notes[15];
+  check_easter_egg();
+  if(num_switches_on >= MAX_SWITCHES){
+    current_mode = COMPOSE;
+    Serial.println("Easter Egg");
+    return;
+  }
   for (int note = 0; note < 15; note++) {
     current_notes[note] = switch_value[0][note];
   }

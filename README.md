@@ -1,3 +1,5 @@
+![alt text](https://raw.githubusercontent.com/jasonwong94/SparkTunes/master/sparkTunes_newDate.png "Spark Tunes")
+
 # SparkTunes
 
 A Spark project that uses Raspberry Pi+ Arduino. The python program uses `pygame` and `serial` library for communication between the Pi and the Arduino to send the notes to be played. The Arduino uses the `Adafruit_NeoPixel` library as it uses the NeoPixel LED strips to indicate the progress/mode of the display. 

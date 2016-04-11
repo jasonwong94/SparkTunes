@@ -520,7 +520,8 @@ void run_play() {
   for (int note = 0; note < 15; note++) {
     current_notes[note] = switch_value[0][note];
   }
-  ledStrips_displayPlayProgress(&strip, 0);
+//  ledStrips_displayPlayProgress(&strip, 0);
+  ledStrips_displayPlayProgress(&strip, 0, get_tempo());
   send_notes(current_notes);
   
   unsigned long beat = 1;
@@ -546,7 +547,8 @@ void run_play() {
       for (int note = 0; note < 15; note++) {
         current_notes[note] = switch_value[beat % 32][note];
       }
-      ledStrips_displayPlayProgress(&strip, beat % 32);
+//      ledStrips_displayPlayProgress(&strip, beat % 32);
+      ledStrips_displayPlayProgress(&strip, beat % 32, get_tempo());
       send_notes(current_notes);
       beat++;
     }

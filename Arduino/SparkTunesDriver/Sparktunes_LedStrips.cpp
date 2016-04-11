@@ -105,6 +105,20 @@ void ledStrips_displayIterations(Adafruit_NeoPixel *strip, int iteration) {
   ledStrips_flashLeds(strip, LEDs, LEDcolour, 500);
 }
 
+uint32_t ledStrips_displayTempo(Adafruit_NeoPixel *strip, int tempo){
+  //min = 100, max = 700
+  
+  if(tempo <= 400){
+    //between green and yellow
+    int red = 255/400* tempo;
+    return strip->Color(red, 255, 0);
+  } else {
+    //between yellow and red
+    int green = 255/700* tempo;
+    return strip->Color(255, green, 0);
+  }
+}
+
 void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat) {
   int num_beats = 32;
   int effective_num_leds = MAX_NUM_LEDS - 1;
@@ -122,9 +136,27 @@ void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat) {
   return;
 }
 
+void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat, unsigned long tempo){
+  int num_beats = 32;
+  int effective_num_leds = MAX_NUM_LEDS - 1;
+  beat++;
+  int turn_on_up_to = beat * effective_num_leds / num_beats;
+  const uint32_t ON_COLOR = ledStrips_displayTempo(strip, tempo);
+  const uint32_t OFF_COLOR = strip->Color(0,0,0);
+  
+  for (int i = 0; i < MAX_NUM_LEDS; i++) {
+    int on = (i >= (effective_num_leds - turn_on_up_to + 1));
+    strip->setPixelColor(i, on ? ON_COLOR : OFF_COLOR);
+  }
+  strip->show();
+
+  return;
+}
+
 void ledStrips_displayComposeStatus(Adafruit_NeoPixel *strip) {
   uint32_t goldenYellow = strip->Color(255, 247, 0);
   for (int led = 0 ; led < MAX_NUM_LEDS; led++)
     strip->setPixelColor(led, goldenYellow);
   strip->show();
 }
+

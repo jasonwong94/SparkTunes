@@ -13,6 +13,7 @@
   void ledStrips_flashLeds(Adafruit_NeoPixel *strip, int leds[], uint32_t colour[], unsigned long pulse);
   void ledStrips_displayIterations(Adafruit_NeoPixel *strip, int iteration);
   void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat);
+  void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat, int tempo);
   void ledStrips_displayComposeStatus(Adafruit_NeoPixel *strip);
   
 #endif

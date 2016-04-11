@@ -17,4 +17,4 @@ Credits to Ian Mckenzie, Sandro Young, Alessandro Sciarra, Helen Meng, James Che
 ## About Spark:
 The Spark Design Club builds interactive electrical and mechanical displays around campus. Past displays include a giant time turner for Orientation Week! (F!rosh Week 1T5) a "magical" reactive LED table and a human powered car racing game.
 
-**Website: ** [spark.skule.ca](https://spark.skule.ca) **Email:** spark[at]skule[dot]ca 
+**Website:  [spark.skule.ca](https://spark.skule.ca) **Email: spark[at]skule[dot]ca 

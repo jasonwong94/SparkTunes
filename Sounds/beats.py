@@ -36,6 +36,8 @@ def whichNoteToPlay(notes):
 def playNotes(soundList):
         for sound in soundList:
                 #print repr(sound.play())
+                if pygame.mixer.find_channel() is None:
+                        sound.stop()
                 sound.play()
                 #sound.fadeout(900)
 

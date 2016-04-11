@@ -23,7 +23,7 @@ const int play_button = 7;
 // Tempo input
 const int tempo_pot = A0; // NEEDS TO BE ANALOG PIN
 // Adafruit LED strips
-const int LEDstripPin = 4;
+const int LEDstripPin = 6;
 
 // End Pin Assignments
 
@@ -103,24 +103,12 @@ void test_columns(){
 // last_updated: address of the place to store the time if this pin was changed
 // now: current time, in ms since startup
 int get_button_posedge(int pin, char* value, unsigned long* last_updated, unsigned long now) {
-  if (pin == play_button) {
-    Serial.print("Last time: ");
-    Serial.println(*last_updated);
-    Serial.print("Now: ");
-    Serial.println(now);
-  }
   if ( (now - *last_updated) < DEBOUNCE_DELAY) {
     // debouncing
     return false;
   }
   
   char new_value = digitalRead(pin);
-  if (pin == play_button) {
-    Serial.print("Current: ");
-    Serial.println(new_value);
-    Serial.print("Previous: ");
-    Serial.println(*value);
-  }
   if (new_value != *value) {
     *value = new_value;
     *last_updated = now;
@@ -303,16 +291,24 @@ void isRaspberryPiReady(){
     String message = Serial.readString();
     if(message = "Ready"){
       piReady = true;
-      ledStrips_setColour(&strip, strip.Color(0, 255, 0) );
+      ledStrips_setColour(&strip, strip.Color(0, 0, 255) );
     }
     else{
       piReady = false; 
-      ledStrips_setColour(&strip, strip.Color(0, 0, 255) );
+      ledStrips_setColour(&strip, strip.Color(255, 0, 0) );
     }
+  } else {
+    piReady = false; 
+    ledStrips_setColour(&strip, strip.Color(255, 0, 0) );
   }
 }
 
 void setup() {
+  
+  // Init serial
+  Serial.begin(115200);
+  debug_print("Debug mode ON");
+  
   // Init pins
   for (int i = 0; i < 32; i++) {
     pinMode(columns[i], INPUT);
@@ -331,7 +327,9 @@ void setup() {
   strip.show();
 
   //test strips
+  Serial.println("About to test led strip");
   ledStrips_test(&strip);
+  Serial.println("Done led strip test");
   
   // Init globals
   for (int i = 0; i < 32; i++) {
@@ -342,10 +340,6 @@ void setup() {
   basic_read_switches(); // sets initial switch values
   play_button_value = true;
   play_button_last_change = 0;
-
-  // Init serial
-  Serial.begin(115200);
-  debug_print("Debug mode ON");
 }
 
 int basic_check_row(int row) {
@@ -497,13 +491,14 @@ void run_compose() {
 void run_play() {
   debug_print("run_play");
   
-  unsigned long start_beat = millis();
   // Play the first beat
   basic_read_switches();
+  unsigned long start_beat = millis();
   char current_notes[15];
   for (int note = 0; note < 15; note++) {
     current_notes[note] = switch_value[0][note];
   }
+  ledStrips_displayPlayProgress(&strip, 0);
   send_notes(current_notes);
   
   unsigned long beat = 1;
@@ -529,6 +524,7 @@ void run_play() {
       for (int note = 0; note < 15; note++) {
         current_notes[note] = switch_value[beat % 32][note];
       }
+      ledStrips_displayPlayProgress(&strip, beat % 32);
       send_notes(current_notes);
       beat++;
     }

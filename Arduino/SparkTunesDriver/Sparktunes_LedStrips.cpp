@@ -3,7 +3,7 @@
 
 //test all the LED strips. We just need to test the "core" leds works: R, G and B
 void ledStrips_test(Adafruit_NeoPixel *strip) {
-  uint32_t colour[3];
+  uint32_t colour[4];
   colour[0] = strip->Color(255, 0, 0);
   colour[1] = strip->Color(0, 255, 0);
   colour[2] = strip->Color(0, 0, 255);
@@ -56,7 +56,6 @@ void ledStrips_setColour(Adafruit_NeoPixel *strip, int leds[], uint32_t colour){
 }
 
 void ledStrips_setColour(Adafruit_NeoPixel *strip, uint32_t colour){
-  ledStrips_reset(strip);
   for (int i = 0; i < MAX_NUM_LEDS; i++)
     strip->setPixelColor(i, colour);
   strip->show();
@@ -108,12 +107,14 @@ void ledStrips_displayIterations(Adafruit_NeoPixel *strip, int iteration) {
 
 void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat) {
   int num_beats = 32;
-  int turn_on_up_to = beat * MAX_NUM_LEDS / num_beats;
-  const int ON_COLOR = strip->Color(0,255,0);
-  const int OFF_COLOR = strip->Color(0,0,0);
+  int effective_num_leds = MAX_NUM_LEDS - 1;
+  beat++;
+  int turn_on_up_to = beat * effective_num_leds / num_beats;
+  const uint32_t ON_COLOR = strip->Color(0,255,0);
+  const uint32_t OFF_COLOR = strip->Color(0,0,0);
   
   for (int i = 0; i < MAX_NUM_LEDS; i++) {
-    int on = (i >= (MAX_NUM_LEDS - turn_on_up_to));
+    int on = (i >= (effective_num_leds - turn_on_up_to + 1));
     strip->setPixelColor(i, on ? ON_COLOR : OFF_COLOR);
   }
   strip->show();
@@ -123,7 +124,6 @@ void ledStrips_displayPlayProgress(Adafruit_NeoPixel *strip, int beat) {
 
 void ledStrips_displayComposeStatus(Adafruit_NeoPixel *strip) {
   uint32_t goldenYellow = strip->Color(255, 247, 0);
-  ledStrips_reset(strip);
   for (int led = 0 ; led < MAX_NUM_LEDS; led++)
     strip->setPixelColor(led, goldenYellow);
   strip->show();
